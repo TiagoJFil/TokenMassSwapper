@@ -1,7 +1,67 @@
 import { EventEmitter } from "events"
 import { Mnemonic, encryptXChaCha20Poly1305, decryptXChaCha20Poly1305, XPrv, PublicKeyGenerator } from "@/../wasm"
+import { UserWallet } from "../../model/entities/wallet/userWallet"
+import { User } from "../../model/entities/user"
 
 
+
+
+
+
+export default class WalletService {
+
+
+  async createUserWallet(user_id: number) {
+    const mnemonic = Mnemonic.random(24)
+    const extendedKey = new XPrv(mnemonic.toSeed())
+    const publicKey = await PublicKeyGenerator.fromMasterXPrv(
+      extendedKey,
+      false,
+      BigInt(0)
+    )
+    const user = await User.findOneBy({id: user_id})
+    //assert that user exists
+    if (!user) throw Error("User not found")
+    
+    let wallet = new UserWallet(
+      publicKey.toString(),
+      mnemonic.phrase,
+      user
+    )
+    
+    await wallet.save()
+  }
+
+  async createReplicaWallet(){
+    
+  }
+
+
+  private async createKeypair() {
+    const mnemonic = Mnemonic.random(24)
+    const extendedKey = new XPrv(mnemonic.toSeed())
+    const publicKey = await PublicKeyGenerator.fromMasterXPrv(
+      extendedKey,
+      false,
+      BigInt(0)
+    )
+    
+    return [publicKey.toString(), mnemonic.phrase]
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
 
 export default class WalletService extends EventEmitter {
 
@@ -56,3 +116,5 @@ export default class WalletService extends EventEmitter {
   }
 
 }
+  //IGNORE
+  */

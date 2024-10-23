@@ -17,6 +17,13 @@ export abstract  class Wallet extends BaseEntity {
 
     @Column()
     is_deleted: boolean;
+
+    //generate constructor
+    constructor(address: string, mnemonic: string) {
+        super();
+        this.address = address;
+        this.mnemonic = mnemonic;
+    }
 }
 
 

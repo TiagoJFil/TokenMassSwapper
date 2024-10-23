@@ -10,4 +10,11 @@ export class UserWallet extends Wallet {
     @OneToOne(type => User)
     @JoinColumn() 
     user_id: User;
+
+
+    //generate constructor
+    constructor(address: string, mnemonic: string, user_id: User) {
+        super(address, mnemonic);
+        this.user_id = user_id;
+    }
 }
