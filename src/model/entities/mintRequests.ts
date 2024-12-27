@@ -1,7 +1,14 @@
 
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, PrimaryColumn, OneToOne, JoinColumn, ManyToOne, ManyToMany } from "typeorm";
-import { IsEmail, IsNotEmpty } from 'class-validator';
-import type { Wallet } from "./wallet/wallet";
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    BaseEntity,
+    JoinColumn,
+    ManyToOne,
+    type Relation
+} from "typeorm";
+import {  IsNotEmpty } from 'class-validator';
 import { ReplicaWallet } from "./wallet/replicaWallet";
 
 export interface mintRequestAttributes {
@@ -20,7 +27,7 @@ export class  MintRequests extends BaseEntity implements mintRequestAttributes {
 
     @JoinColumn()
     @ManyToOne(type => ReplicaWallet)
-    wallet_address: ReplicaWallet;
+    wallet_address: Relation<ReplicaWallet>;
 
     @Column()
     @IsNotEmpty()

@@ -1,6 +1,11 @@
-
-//make a wallet entity class and using typeorm looking at db.sql file
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, PrimaryColumn, OneToOne, JoinColumn, ManyToMany, ManyToOne, OneToMany } from "typeorm";
+import {
+    Entity,
+    Column,
+    JoinColumn,
+    ManyToOne,
+    OneToMany,
+    type Relation
+} from "typeorm";
 
 import { Wallet } from "./wallet";
 import { WalletManager } from "../walletManager";
@@ -9,14 +14,22 @@ import { MintRequests } from "../mintRequests";
 
 @Entity()
 export class ReplicaWallet extends Wallet {
-    
-    @ManyToOne(type => WalletManager, manager => manager.wallets)
-    managed_by: WalletManager;
+
+    @Column()
+    index : number;
+
+    @JoinColumn()
+    @ManyToOne(() => WalletManager, manager => manager.wallets)
+    managed_by: Relation<WalletManager>;
 
     @Column()
     is_minting: boolean
 
     @JoinColumn()
-    @OneToMany(type => MintRequests, mintedRequest => mintedRequest.wallet_address)
-    mintedRequest: MintRequests[];
+    @OneToMany(() => MintRequests, mintedRequest => mintedRequest.wallet_address)
+    mintedRequest: Relation<MintRequests[]>;
+
+    @Column()
+    privateKey: string;
+
 }

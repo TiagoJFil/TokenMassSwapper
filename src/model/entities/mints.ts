@@ -1,9 +1,13 @@
-
-//make a wallet entity class and using typeorm looking at db.sql file
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, PrimaryColumn, OneToOne, JoinColumn } from "typeorm";
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    BaseEntity,
+    JoinColumn,
+    type Relation, ManyToOne
+} from "typeorm";
 import { IsNotEmpty } from 'class-validator';
-import type { Wallet } from "./wallet/wallet";
-import type { ReplicaWallet } from "./wallet/replicaWallet";
+import { ReplicaWallet } from "./wallet/replicaWallet";
 
 export interface mintAttributes {
     id: number;
@@ -12,13 +16,13 @@ export interface mintAttributes {
     created_at: Date;
 }
 @Entity()
-export class  Mints extends BaseEntity implements mintAttributes {
+export class Mints extends BaseEntity implements mintAttributes {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
-    @IsNotEmpty()
-    wallet_address: ReplicaWallet;
+    @ManyToOne(() => ReplicaWallet)
+    @JoinColumn()
+    wallet_address: Relation<ReplicaWallet>;
 
     @Column()
     @IsNotEmpty()

@@ -3,11 +3,14 @@ import { DataSource } from 'typeorm';
 
 
 export const AppDataSource = new DataSource({
-  type: 'sqlite',
-  database: 'database.sqlite',
-  synchronize: true,
+  type: 'postgres',
+  host: 'localhost',
+  port: 5432,
+  username: 'postgres',
+  password: 'postgres',
+  database: 'postgres',
+  autoLoadEntities: true,
   logging: true,
-  entities: [__dirname + '/../entities/*.entity{.ts,.js}'],
-  subscribers: [],
-  migrations: [],
+  entities: [__dirname + '/../entities/*{.ts,.js}',__dirname + '/../entities/**/*{.ts,.js}'],
 })
+
