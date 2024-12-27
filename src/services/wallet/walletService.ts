@@ -1,56 +1,103 @@
 import { EventEmitter } from "events"
-import { Mnemonic, encryptXChaCha20Poly1305, decryptXChaCha20Poly1305, XPrv, PublicKeyGenerator } from "@/../wasm"
+import { Mnemonic, encryptXChaCha20Poly1305, decryptXChaCha20Poly1305, XPrv, PublicKeyGenerator } from "../../wasm"
 import { UserWallet } from "../../model/entities/wallet/userWallet"
 import { User } from "../../model/entities/user"
+import type { PrivateKey } from "../../wasm/kaspa"
+import { ReplicaWallet } from "../../model/entities/wallet/replicaWallet"
+import type { WalletManager } from "../../model/entities/walletManager"
 
 
 
 
 
 
-export default class WalletService {
-
+export class WalletService {
+  constructor() {
+    
+  }
 
   async createUserWallet(user_id: number) {
-    const mnemonic = Mnemonic.random(24)
-    const extendedKey = new XPrv(mnemonic.toSeed())
-    const publicKey = await PublicKeyGenerator.fromMasterXPrv(
-      extendedKey,
-      false,
-      BigInt(0)
-    )
+    const mnemonic = KeypairGen.generateMnemonic()
+    
     const user = await User.findOneBy({id: user_id})
     //assert that user exists
     if (!user) throw Error("User not found")
+    const {publicKey, privateKey} = await KeypairGen.createUserKeyPair(mnemonic)
     
     let wallet = new UserWallet(
-      publicKey.toString(),
+      publicKey.toString(), //TODO: console log this
       mnemonic.phrase,
       user
     )
     
     await wallet.save()
   }
+  
 
-  async createReplicaWallet(){
-    
-  }
+  /*private*/ async createReplicaWallets(/* walletManager: WalletManager,*/ mnemonic: Mnemonic,index: number){
+    const {publicKey, privateKey} = await KeypairGen.createKeypair(mnemonic,index)
+    //save to db
 
-
-  private async createKeypair() {
-    const mnemonic = Mnemonic.random(24)
-    const extendedKey = new XPrv(mnemonic.toSeed())
-    const publicKey = await PublicKeyGenerator.fromMasterXPrv(
-      extendedKey,
-      false,
-      BigInt(0)
+    console.log(privateKey.toAddress)
+    /*
+    const wallet = new ReplicaWallet(
+      publicKey.toString(),
+      privateKey.toString(),
+      walletManager
     )
-    
-    return [publicKey.toString(), mnemonic.phrase]
+    */
+
+    return {publicKey, privateKey}
   }
+
+  
 
 }
 
+class KeypairGen {
+
+  static generateMnemonic() : Mnemonic{
+    return Mnemonic.random(24)
+  }
+
+  private static getMnemonicSeed(mnemonic : Mnemonic){
+    const extendedKey = new XPrv(mnemonic.toSeed())
+    return extendedKey;
+  }
+
+  static async createKeypair(mnemonic : Mnemonic, walletIndex: number) : Promise<walletGenerator> {
+    if(walletIndex == 0) throw new Error("CANT CREATE WALLET WITH INDEX 0")
+    return await this._createKeyPair(mnemonic,walletIndex)
+  }
+
+  static async createUserKeyPair(mnemonic : Mnemonic){
+    return await this._createKeyPair(mnemonic, 0)
+    
+  }
+
+  private static async _createKeyPair(mnemonic : Mnemonic,walletIndex: number){
+    const extendedKey = this.getMnemonicSeed(mnemonic);
+    
+    const publicKey = await PublicKeyGenerator.fromMasterXPrv(
+      extendedKey,
+      false,
+      BigInt(walletIndex)
+    )
+
+    
+    return { 
+      "publicKey": publicKey,
+      "privateKey": extendedKey.toPrivateKey()
+    }
+  }
+
+  
+}
+
+type walletGenerator = {
+  publicKey: PublicKeyGenerator
+  privateKey: PrivateKey
+}
 
 
 
