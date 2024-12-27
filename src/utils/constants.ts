@@ -1,12 +1,17 @@
 
-class API{
+export class API{
     public static MAINNET = class {
-        public static KASPLEX = 'https://api.kasplex.org/v1';
+        public static KASPLEX = 'https://api.kasplex.org';
         public static KASPA = 'api.kaspa.org';
     }
     
     public static TESTNET = class {
-        public static KASPLEX = 'https://tn11api.kasplex.org/v1';
+        public static KASPLEX = 'https://tn10api.kasplex.org';
         public static KASPA = 'api.kaspa.org';
     } 
+}
+
+export class KRC20 {
+    public static MIN_SIZE = 4
+    public static MAX_SIZE = 6
 }

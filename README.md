@@ -24,3 +24,12 @@ or install a wallet and a node..
 
 if needed run own kaspa api server
 https://github.com/kaspa-ng/kaspa-rest-server
+
+
+
+wasm bin path: https://kaspa.aspectron.org/nightly/downloads/
+download, open and insert content from nodejs/kaspa folder on ./wasm directory
+
+
+
+https://github.com/telegraf/telegraf

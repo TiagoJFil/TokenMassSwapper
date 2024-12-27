@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start" : "bun run ./index.ts",
+    "start": "bun run ./index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "trustedDependencies": ["sqlite3"],
+  "trustedDependencies": [
+    "sqlite3"
+  ],
   "dependencies": {
     "axios": "^1.7.7",
     "class-validator": "^0.14.1",
@@ -16,6 +18,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "kasplexbuilder": "github:KaffinPX/KasplexBuilder",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
     "sequelize-typescript-generator": "^11.0.8",
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.20"
