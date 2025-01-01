@@ -1,43 +1,34 @@
-import { Indexer } from 'KasplexBuilder'
-import { AppDataSource } from './src/model/database/database.providers'
+import { Indexer,Inscription } from 'KasplexBuilder'
 import express from 'express'
-import cors from 'cors'
-import { API } from '../../utils/constants'
+import {API, NESTJS} from '../../utils/constants'
 import type { KRC20BalancesResponse, KRC20InfoResponse } from 'KasplexBuilder/src/indexer/protocol'
 import { KRC20BalanceDTO } from '../dtos/KRC20/KRC20BalanceDTO'
 import { requireTickerValid } from '../../utils/validation'
 import { KRC20TokenInfoDTO, KRC20TokenState } from '../dtos/KRC20/KRC20TokenInfoDTO'
 import { checkKRC20TokenState, parseDecimals } from '../../utils/utils'
 import { ScriptBuilder, XOnlyPublicKey, addressFromScriptPublicKey } from '../../wasm'
-import { Inscription } from 'KasplexBuilder'
 import { TokenFullyMintedException, TokenNotMintableException } from '../exceptions'
 import { Address } from '../../wasm/kaspa'
-import { Network } from '../../settings'
+import { Network } from '../settings'
+import {Inject, Injectable} from "@nestjs/common";
+import {TestnetIndexer} from "./Indexers.ts";
 
 
-
-
+@Injectable()
 export class KasplexService {
-    private static instance: KasplexService
-    private indexer: Indexer
 
-    private constructor(ind: Indexer) {
-        this.indexer = ind
+    public constructor(
+        @Inject(NESTJS.INDEXER_PROVIDER_KEY)
+        private indexer: Indexer
+    ) {
     }
-    
-    public static getInstance(): KasplexService {
-        if (!KasplexService.instance) {
-            const indexer = new Indexer(API.MAINNET.KASPLEX)
-            KasplexService.instance = new KasplexService(indexer)
-        }
-        return KasplexService.instance
-    }
-    
+
     async getKRC20Balances(address: string): Promise<KRC20BalancesResponse> {
         try {
             const balances = await this.indexer.getKRC20Balances({
                 address: address
             })
+            console.log(balances)
             return balances
         }
         catch(err) {
@@ -45,7 +36,7 @@ export class KasplexService {
             throw new Error("Addres Not found")
         }
     } 
-
+/*
     async getKRC20TickerInfo(ticker: string): Promise<KRC20TokenInfoDTO> {
         requireTickerValid(ticker)
         try {
@@ -56,14 +47,14 @@ export class KasplexService {
             if(!infoObj) {
                 throw new Error("Ticker Not found")
             }
-            
+
             const tokenInfoDTO = new KRC20TokenInfoDTO(
                 infoObj.tick,
-                parseDecimals(infoObj.max, infoObj.dec), 
+                parseDecimals(infoObj.max, infoObj.dec),
                 parseDecimals(infoObj.lim, infoObj.dec),
                 parseDecimals(infoObj.pre, infoObj.dec),
-                infoObj.dec, 
-                parseDecimals(infoObj.minted, infoObj.dec), 
+                infoObj.dec,
+                parseDecimals(infoObj.minted, infoObj.dec),
                 infoObj.state)
 
             return tokenInfoDTO
@@ -87,7 +78,7 @@ export class KasplexService {
             }
             //balnce with dec caclution
             const tokenBalanceDTO = new KRC20BalanceDTO(info.tick,parseDecimals(info.balance,info.dec))
-                
+
             return tokenBalanceDTO
         }catch(err) {
             console.error(err)
@@ -114,10 +105,10 @@ export class KasplexService {
             throw new Error("Address Not found")
         }
     }
-
+*/
     
 
-
+/*
     async mintKRC20Token(wallet: string, privateKey: string, ticker: string, amount: number): Promise<Inscription> {
         const tokenInfo = await this.getKRC20TickerInfo(ticker)
         checkKRC20TokenState(tokenInfo.state)
@@ -132,14 +123,14 @@ export class KasplexService {
         transaction.fillInput(0, script.encodePayToScriptHashSignatureScript(signature))  
 
     }
-    
+  */
 }
 
 export enum ScriptAction {
     MINT = "mint",
     TRANSFER = "transfer"
 }
-
+/*
 function prepareKRC20Script(script: ScriptBuilder,ticker: string, amount: number, decimals : number, wallet: string, action: ScriptAction): Inscription<ScriptAction> {
    
         
@@ -156,3 +147,4 @@ function prepareKRC20Script(script: ScriptBuilder,ticker: string, amount: number
         return inscription
 }
 
+*/

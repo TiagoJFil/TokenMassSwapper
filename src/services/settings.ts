@@ -1,5 +1,5 @@
-import { API } from "./utils/constants";
-import { NetworkType } from "./wasm/kaspa";
+import { API } from "../utils/constants";
+import { NetworkType } from "../wasm/kaspa";
 
 
 
@@ -47,6 +47,7 @@ export class Network {
             case Networks.TESTNET:
                 return API.TESTNET.KASPLEX
         }
+        return API.TESTNET.KASPLEX
     }
 
     public getKaspaUrl(): string {
@@ -56,6 +57,7 @@ export class Network {
             case Networks.TESTNET:
                 return API.TESTNET.KASPA
         }
+        return API.TESTNET.KASPA
     }
 
     public getKasplexNetworkType(): NetworkType {
@@ -65,6 +67,7 @@ export class Network {
             case Networks.TESTNET:
                 return NetworkType.Testnet
         }
+        return NetworkType.Testnet
     }
 
 }

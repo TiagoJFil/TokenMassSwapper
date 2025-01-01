@@ -8,6 +8,30 @@ export class ServiceException extends Error {
     }
 }
 
+
+//user has no wallet exception
+export class NotFoundException extends ServiceException {
+    constructor(message: string) {
+        super(message);
+        this.name = 'NotFoundException';
+    }
+}
+
+//wallet not found exception
+export class WalletNotFoundException extends NotFoundException {
+    constructor(message: string) {
+        super(message);
+        this.name = 'WalletNotFoundException';
+    }
+}
+// user not found
+export class UserNotFoundException extends NotFoundException {
+    constructor(username: string | number) {
+        super(`User with id ${username} not found`);
+        this.name = 'UserNotFoundException';
+    }
+}
+
 //krc20 exception
 export class KRC20Exception extends ServiceException {
     constructor(message: string) {

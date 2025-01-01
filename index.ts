@@ -4,7 +4,7 @@ import express from 'express'
 import cors from 'cors'
 import { API } from './src/utils/constants'
 import { KasplexService} from './src/services/inscriptions/kasplexService'
-import { WalletService } from './src/services/wallet/walletService'
+import { WalletService } from './src/services/wallet/wallet.service'
 import { Mnemonic } from './src/wasm/kaspa'
 
 const app = express()
