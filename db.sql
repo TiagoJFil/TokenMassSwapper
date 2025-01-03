@@ -1,4 +1,4 @@
--- Active: 1729460765156@@127.0.0.1@3306
+
 CREATE TABLE wallet(  
     address VARCHAR(255) NOT NULL,
     mnemonic VARCHAR(255) NOT NULL,
@@ -48,7 +48,5 @@ create table mint_requests(
 
 create table "user"(
     id int primary key ,
-    username varchar(255) not null,
-    password varchar(255) not null,
-    email varchar(255) not null
+    username varchar(255) not null
 );

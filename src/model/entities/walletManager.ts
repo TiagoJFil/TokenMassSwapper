@@ -1,7 +1,7 @@
 import {  IsNotEmpty } from 'class-validator';
 import {BaseEntity, Column, PrimaryColumn, OneToOne, JoinColumn, OneToMany, type Relation, Entity} from "typeorm";
 import { ReplicaWallet } from './wallet/replicaWallet';
-import {User} from "./user.ts";
+import {User} from "./user";
 
 @Entity()
 export class WalletManager extends BaseEntity {

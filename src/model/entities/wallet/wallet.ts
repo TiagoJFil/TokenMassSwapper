@@ -9,11 +9,12 @@ export abstract class Wallet extends BaseEntity {
     @IsNotEmpty()
     address: string;
 
-    @Column()
+    @Column({ default: false })
     is_deleted: boolean;
 
     constructor(address: string) {
         super();
+        this.is_deleted = false;
         this.address = address;
     }
 }

@@ -15,3 +15,12 @@ export class KRC20 {
     public static MIN_SIZE = 4
     public static MAX_SIZE = 6
 }
+
+export class NESTJS {
+    public static INDEXER_PROVIDER_KEY = 'INDEXER'
+}
+
+export class ENV {
+    public static NETWORK_SELECTED = 'NETWORK_SELECTED'
+
+}

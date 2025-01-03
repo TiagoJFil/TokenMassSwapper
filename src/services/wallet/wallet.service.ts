@@ -5,53 +5,70 @@ import { User } from "../../model/entities/user"
 import type { PrivateKey } from "../../wasm/kaspa"
 import { ReplicaWallet } from "../../model/entities/wallet/replicaWallet"
 import type { WalletManager } from "../../model/entities/walletManager"
+import { Injectable } from '@nestjs/common';
+import {InjectRepository} from "@nestjs/typeorm";
+import {BaseEntity, Repository} from "typeorm";
+import {UserNotFoundException, WalletNotFoundException} from "../exceptions";
 
 
 
+type Address = string
 
 
-
+@Injectable()
 export class WalletService {
-  constructor() {
-    
-  }
+  constructor(
+    @InjectRepository(UserWallet)
+    private userWalletRepository: Repository<UserWallet>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>
+  ) {}
 
-  async createUserWallet(user_id: number) {
+  async createUserWallet(user_id: number): Promise<Address> {
     const mnemonic = KeypairGen.generateMnemonic()
-    
-    const user = await User.findOneBy({id: user_id})
+
+    const user = await this.userRepository.findOneBy({id: user_id})
     //assert that user exists
     if (!user) throw Error("User not found")
     const {publicKey, privateKey} = await KeypairGen.createUserKeyPair(mnemonic)
-    
+    //TODO: review what to do with the pk
     let wallet = new UserWallet(
-      publicKey.toString(), //TODO: console log this
-      mnemonic.phrase,
-      user
+        publicKey.toString(),
+        mnemonic.phrase
     )
-    
-    await wallet.save()
-  }
-  
+    await this.userWalletRepository.save(wallet)
 
-  /*private*/ async createReplicaWallets(/* walletManager: WalletManager,*/ mnemonic: Mnemonic,index: number){
-    const {publicKey, privateKey} = await KeypairGen.createKeypair(mnemonic,index)
-    //save to db
-
-    console.log(privateKey.toAddress)
-    /*
-    const wallet = new ReplicaWallet(
-      publicKey.toString(),
-      privateKey.toString(),
-      walletManager
-    )
-    */
-
-    return {publicKey, privateKey}
+    return wallet.address
   }
 
-  
 
+    private async createReplicaWallets( walletManager: WalletManager,mnemonic: Mnemonic,index: number){
+      const {publicKey, privateKey} = await KeypairGen.createKeypair(mnemonic,index)
+      //save to db
+
+      console.log(privateKey.toAddress)
+
+      const wallet = new ReplicaWallet(
+        publicKey.toString(),
+        privateKey.toString(),
+        walletManager
+      )
+
+
+      return {publicKey, privateKey}
+    }
+
+
+    async getUserWalletInfo(user_id: number) : Promise<Address> {
+      const user = await this.userRepository.findOneBy({id: user_id})
+      //assert that user exists
+      if (!user) throw new UserNotFoundException(user_id)
+
+      const userWallet = await this.userWalletRepository.findOneBy({user: user})
+      //assert that user has a wallet
+      if (!userWallet) throw new WalletNotFoundException("User has no wallet")
+      return userWallet.address
+    }
 }
 
 class KeypairGen {
@@ -98,14 +115,6 @@ type walletGenerator = {
   publicKey: PublicKeyGenerator
   privateKey: PrivateKey
 }
-
-
-
-
-
-
-
-
 
 
 /*

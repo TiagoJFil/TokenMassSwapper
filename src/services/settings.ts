@@ -1,5 +1,5 @@
-import { API } from "./utils/constants";
-import { NetworkType } from "./wasm/kaspa";
+import {API, ENV} from "../utils/constants";
+import { NetworkType } from "../wasm/kaspa";
 
 
 
@@ -10,7 +10,7 @@ enum Networks {
 
 export class Network {
     
-    selected: string | null = null;
+    private current: string | null = null;
 
     //singleton
     private static instance: Network;
@@ -24,47 +24,58 @@ export class Network {
     }
 
     getNetworkFromEnv(): string {
-        switch(process.env["NETWORK_SELECTED"]) {
+        switch(process.env[ENV.NETWORK_SELECTED]) {
             case Networks.MAINNET:
-                this.selected = Networks.MAINNET
+                this.current = Networks.MAINNET
                 return Networks.MAINNET
             case Networks.TESTNET:
-                this.selected = Networks.TESTNET
+                this.current = Networks.TESTNET
                 return Networks.TESTNET
             default:
-                this.selected = Networks.TESTNET
+                this.current = Networks.TESTNET
                 return Networks.TESTNET
         }
         
     }
 
-    public current = this.selected != null ? this.selected : this.getNetworkFromEnv()
+    public selected = this.current != null ? this.current : this.getNetworkFromEnv()
+
+    public isMainnet(): boolean {
+        return this.selected === Networks.MAINNET
+    }
+
+    public isTestnet(): boolean {
+        return this.selected === Networks.TESTNET
+    }
 
     public getKasplexUrl(): string {
-        switch(this.current) {
+        switch(this.selected) {
             case Networks.MAINNET:
                 return API.MAINNET.KASPLEX
             case Networks.TESTNET:
                 return API.TESTNET.KASPLEX
         }
+        return API.TESTNET.KASPLEX
     }
 
     public getKaspaUrl(): string {
-        switch(this.current) {
+        switch(this.selected) {
             case Networks.MAINNET:
                 return API.MAINNET.KASPA
             case Networks.TESTNET:
                 return API.TESTNET.KASPA
         }
+        return API.TESTNET.KASPA
     }
 
     public getKasplexNetworkType(): NetworkType {
-        switch(this.current) {
+        switch(this.selected) {
             case Networks.MAINNET:
                 return NetworkType.Mainnet
             case Networks.TESTNET:
                 return NetworkType.Testnet
         }
+        return NetworkType.Testnet
     }
 
 }
