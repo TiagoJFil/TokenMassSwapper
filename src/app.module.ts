@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import {AppController} from './controllers/app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {KasplexService} from "./services/inscriptions/kasplexService.ts";
-import {IndexerModule} from "./services/inscriptions/Indexers.ts";
-import {WalletService} from "./services/wallet/wallet.service.ts";
-import {User} from "./model/entities/user.ts";
-import {UserWallet} from "./model/entities/wallet/userWallet.ts";
+import {KasplexService} from "./services/inscriptions/kasplexService";
+import {IndexerModule} from "./services/inscriptions/Indexers";
+import {WalletService} from "./services/wallet/wallet.service";
+import {User} from "./model/entities/user";
+import {UserWallet} from "./model/entities/wallet/userWallet";
 
 @Module({
   imports: [IndexerModule],

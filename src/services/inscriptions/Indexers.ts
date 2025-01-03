@@ -1,7 +1,10 @@
-import {Indexer} from "KasplexBuilder";
-import {API, NESTJS} from "../../utils/constants.ts";
-import {Injectable, Module, type Provider} from "@nestjs/common";
 
+import {API, NESTJS} from "../../utils/constants";
+import {Injectable, Module, type Provider} from "@nestjs/common";
+import {Indexer} from "../kasplexAPIUtils/indexer/indexer";
+import {Network} from "../settings";
+
+@Injectable()
 export class MainnetIndexer extends Indexer {
     constructor () {
         super(API.MAINNET.KASPLEX)

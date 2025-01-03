@@ -8,7 +8,7 @@ import type { WalletManager } from "../../model/entities/walletManager"
 import { Injectable } from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {BaseEntity, Repository} from "typeorm";
-import {UserNotFoundException, WalletNotFoundException} from "../exceptions.ts";
+import {UserNotFoundException, WalletNotFoundException} from "../exceptions";
 
 
 

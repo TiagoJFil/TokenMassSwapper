@@ -1,4 +1,4 @@
-import {KRC20BalanceDTO} from "../../services/dtos/KRC20/KRC20BalanceDTO.ts";
+import {KRC20BalanceDTO} from "../../services/dtos/KRC20/KRC20BalanceDTO";
 
 
 export class UserWalletInfoOutput {

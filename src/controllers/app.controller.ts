@@ -1,7 +1,7 @@
 import {Controller, Get, Injectable, Param, Post} from '@nestjs/common';
-import { WalletService } from '../services/wallet/wallet.service.ts';
-import {UserWalletInfoOutput} from "./dtos/UserWalletInfoOutput.ts";
-import {KasplexService} from "../services/inscriptions/kasplexService.ts";
+import { WalletService } from '../services/wallet/wallet.service';
+import {UserWalletInfoOutput} from "./dtos/UserWalletInfoOutput";
+import {KasplexService} from "../services/inscriptions/kasplexService";
 
 
 

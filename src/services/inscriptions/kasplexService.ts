@@ -1,4 +1,3 @@
-import { Indexer,Inscription } from 'KasplexBuilder'
 import express from 'express'
 import {API, NESTJS} from '../../utils/constants'
 import type { KRC20BalancesResponse, KRC20InfoResponse } from 'KasplexBuilder/src/indexer/protocol'
@@ -11,7 +10,8 @@ import { TokenFullyMintedException, TokenNotMintableException } from '../excepti
 import { Address } from '../../wasm/kaspa'
 import { Network } from '../settings'
 import {Inject, Injectable} from "@nestjs/common";
-import {TestnetIndexer} from "./Indexers.ts";
+import {TestnetIndexer} from "./Indexers";
+import {Indexer} from "../kasplexAPIUtils/indexer/indexer";
 
 
 @Injectable()
