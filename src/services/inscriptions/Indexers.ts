@@ -21,7 +21,7 @@ export class TestnetIndexer extends Indexer {
 export const IndexerProvider: Provider = {
     provide: NESTJS.INDEXER_PROVIDER_KEY,
     useFactory: () => {
-        return process.env["IS_MAIN_NET"] === 'true' ? new MainnetIndexer() : new TestnetIndexer();
+        return Network.getInstance().isMainnet() ? new MainnetIndexer() : new TestnetIndexer();
     },
 };
 
@@ -29,7 +29,7 @@ export const IndexerProvider: Provider = {
     imports: [],
     controllers: [],
     providers: [IndexerProvider, MainnetIndexer,TestnetIndexer],
-    exports: [IndexerProvider ],
+    exports: [IndexerProvider],
 })
 export class IndexerModule {}
 

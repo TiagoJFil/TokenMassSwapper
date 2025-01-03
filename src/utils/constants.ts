@@ -19,3 +19,8 @@ export class KRC20 {
 export class NESTJS {
     public static INDEXER_PROVIDER_KEY = 'INDEXER'
 }
+
+export class ENV {
+    public static NETWORK_SELECTED = 'NETWORK_SELECTED'
+
+}

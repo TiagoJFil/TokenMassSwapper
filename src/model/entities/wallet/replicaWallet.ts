@@ -31,5 +31,10 @@ export class ReplicaWallet extends Wallet {
 
     @Column()
     privateKey: string;
-
+    constructor(address: string, privateKey: string, walletManager: WalletManager) {
+        super(address);
+        this.privateKey = privateKey;
+        this.managed_by = walletManager;
+        this.is_minting = false;
+    }
 }
