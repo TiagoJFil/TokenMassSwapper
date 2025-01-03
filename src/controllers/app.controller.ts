@@ -24,6 +24,7 @@ export class AppController {
   ): Promise<UserWalletInfoOutput> {
     const walletAddy = await this.walletService.getUserWalletInfo(user_id);
     const KRCBalances = await this.kasplexService.getKRC20Balances(walletAddy);
+    // @ts-ignore
     return new UserWalletInfoOutput(walletAddy, KRCBalances);
   }
 
