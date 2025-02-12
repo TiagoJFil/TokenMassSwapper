@@ -3,13 +3,10 @@ import {
     Column,
     JoinColumn,
     ManyToOne,
-    OneToMany,
-    type Relation
-} from "typeorm";
-
-import { Wallet } from "./wallet";
+    type Relation, ChildEntity,
+} from 'typeorm';
 import { WalletManager } from "../walletManager";
-import { MintRequests } from "../mintRequests";
+import { Wallet } from "./wallet";
 
 
 @Entity()
@@ -19,22 +16,15 @@ export class ReplicaWallet extends Wallet {
     index : number;
 
     @JoinColumn()
-    @ManyToOne(() => WalletManager, manager => manager.wallets)
+    @ManyToOne(() => WalletManager, manager => manager.wallets, { lazy: true })
     managed_by: Relation<WalletManager>;
 
     @Column()
-    is_minting: boolean
-
-    @JoinColumn()
-    @OneToMany(() => MintRequests, mintedRequest => mintedRequest.wallet_address)
-    mintedRequest: Relation<MintRequests[]>;
-
-    @Column()
     privateKey: string;
-    constructor(address: string, privateKey: string, walletManager: WalletManager) {
+
+    constructor(address: string, privateKey: string, index: number) {
         super(address);
         this.privateKey = privateKey;
-        this.managed_by = walletManager;
-        this.is_minting = false;
+        this.index =index
     }
 }

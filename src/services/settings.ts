@@ -1,5 +1,5 @@
 import {API, ENV} from "../utils/constants";
-import { NetworkType } from "../wasm/kaspa";
+// import { NetworkType } from "../wasm/kaspa";
 
 
 
@@ -24,17 +24,15 @@ export class Network {
     }
 
     getNetworkFromEnv(): string {
-        switch(process.env[ENV.NETWORK_SELECTED]) {
-            case Networks.MAINNET:
-                this.current = Networks.MAINNET
-                return Networks.MAINNET
-            case Networks.TESTNET:
-                this.current = Networks.TESTNET
-                return Networks.TESTNET
-            default:
-                this.current = Networks.TESTNET
-                return Networks.TESTNET
+        if(process.env[ENV.IS_MAINNET]) {
+            this.current = Networks.MAINNET
+            return Networks.MAINNET
         }
+        else{
+            this.current = Networks.TESTNET
+            return Networks.TESTNET
+        }
+
         
     }
 
@@ -68,15 +66,15 @@ export class Network {
         return API.TESTNET.KASPA
     }
 
-    public getKasplexNetworkType(): NetworkType {
-        switch(this.selected) {
-            case Networks.MAINNET:
-                return NetworkType.Mainnet
-            case Networks.TESTNET:
-                return NetworkType.Testnet
-        }
-        return NetworkType.Testnet
-    }
+    // public getKasplexNetworkType(): NetworkType {
+    //     switch(this.selected) {
+    //         case Networks.MAINNET:
+    //             return NetworkType.Mainnet
+    //         case Networks.TESTNET:
+    //             return NetworkType.Testnet
+    //     }
+    //     return NetworkType.Testnet
+    // }
 
 }
 

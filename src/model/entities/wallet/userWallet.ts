@@ -3,8 +3,8 @@ import {
     Column,
     OneToOne,
     JoinColumn,
-    type Relation
-} from "typeorm";
+    type Relation, ChildEntity,
+} from 'typeorm';
 import { User } from "../user";
 import { Wallet } from "./wallet";
 import { IsNotEmpty } from "class-validator";

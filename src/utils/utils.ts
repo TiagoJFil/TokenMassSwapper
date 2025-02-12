@@ -1,4 +1,4 @@
-import { KRC20TokenState } from "../services/dtos/KRC20/KRC20TokenInfoDTO"
+import { KRC20TokenState } from "../services/kaspa/dtos/KRC20/KRC20TokenInfoDTO"
 import { TokenFullyMintedException, TokenNotMintableException } from "../services/exceptions"
 
 

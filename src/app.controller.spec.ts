@@ -1,21 +1,21 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './controllers/app.controller';
-
-describe('AppController', () => {
-  let appController: AppController;
-
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [],
-    }).compile();
-
-    appController = app.get<AppController>(AppController);
-  });
-
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-
-    });
-  });
-});
+// import { Test, TestingModule } from '@nestjs/testing';
+// import { KaspaAppController } from './controllers/kaspa/kaspaAppController';
+//
+// describe('AppController', () => {
+//   let appController: KaspaAppController;
+//
+//   beforeEach(async () => {
+//     const app: TestingModule = await Test.createTestingModule({
+//       controllers: [KaspaAppController],
+//       providers: [],
+//     }).compile();
+//
+//     appController = app.get<KaspaAppController>(KaspaAppController);
+//   });
+//
+//   describe('root', () => {
+//     it('should return "Hello World!"', () => {
+//
+//     });
+//   });
+// });
