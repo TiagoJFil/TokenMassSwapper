@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import bip39, { mnemonicToEntropy } from 'bip39';
+import { mnemonicToEntropy,generateMnemonic } from 'bip39';
 import * as CardanoWasm from '@emurgo/cardano-serialization-lib-nodejs';
 import { CardanoUtils } from '../utils';
 import { NESTJS } from '../../../utils/constants';
@@ -23,7 +23,7 @@ export class CardanoWalletProvider {
   }
 
   generateMnemonic(): MyMnemonic {
-    return bip39.generateMnemonic();
+    return generateMnemonic();
   }
   createUserKeyPair(mnemonic: MyMnemonic): KeypairInfo {
     return this.deriveKeypair(mnemonic, 0);

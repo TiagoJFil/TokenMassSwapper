@@ -1,15 +1,15 @@
-import { EventEmitter } from 'events';
 import { UserWallet } from '../model/entities/wallet/userWallet';
 import { User } from '../model/entities/user';
 import { ReplicaWallet } from '../model/entities/wallet/replicaWallet';
-import type { WalletManager } from '../model/entities/walletManager';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseEntity, Repository } from 'typeorm';
 import { UserNotFoundException, WalletNotFoundException } from './exceptions';
 import { CardanoWalletProvider } from './cardano/provider/CardanoWalletProvider';
-import { Wallet } from '../model/entities/wallet/wallet';
+
 import { PublicWalletInfo } from './dto';
+import { WalletManager } from '../model/entities/walletManager';
+import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
 export class WalletService  {
@@ -18,6 +18,8 @@ export class WalletService  {
     private userWalletRepository: Repository<UserWallet>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(WalletManager)
+    private walletManagerRepository: Repository<WalletManager>,
     private readonly walletProvider: CardanoWalletProvider
   ) {}
 
@@ -27,23 +29,71 @@ export class WalletService  {
     const user = await this.userRepository.findOneBy({ id: userId });
     //assert that user exists
     if (!user) throw Error('User not found');
-    const { publicKey, privateKey, stakeKey } = await this.walletProvider.createUserKeyPair(mnemonic);
+    const { publicKey, stakeKey, privateKey } =
+      this.walletProvider.createUserKeyPair(mnemonic);
     //TODO: review what to do with the pk
-    const wallet = new UserWallet(publicKey.toString(), mnemonic);
+    const wallet = new UserWallet(publicKey.toString(),stakeKey, mnemonic);
     wallet.user = user;
     wallet.stake_address = stakeKey;
     user.wallet = wallet;
     await this.userRepository.save(user);
     return await this.userWalletRepository.save(wallet);
-
   }
 
-  private async createReplicaWallets(
+  async setReplicaWallets(
+    userId: number,
+    count: number,
+  ): Promise<KeypairInfo[]> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    //assert that user exists
+    if (!user) throw new UserNotFoundException(userId);
+    const walletManager = await this.walletManagerRepository.findOneBy({ user: user });
+    if (!walletManager) {
+
+    }
+  }
+
+
+  @Transactional()
+  async createReplicaWallets(
+    userId: number,
+    count: number,
+  ): Promise<KeypairInfo[]> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    //assert that user exists
+    if (!user) throw new UserNotFoundException(userId);
+    const userMnemonic = (await this.userWalletRepository.findOneBy({ user: user })).mnemonic;
+
+
+    const walletManager = await this.walletManagerRepository.save(new WalletManager(user));
+    const replicaWallets = [];
+    const replicaWalletsResultDTOList = [];
+
+    for (let i = 1; i < count +1; i++) {
+      const replicaWallet = this.generateReplicaWallet(
+        walletManager,
+        userMnemonic,
+        i,
+      );
+      replicaWallets.push(replicaWallet);
+      const publicKey = replicaWallet.address;
+      const privateKey = replicaWallet.privateKey;
+      const stakeKey = replicaWallet.stake_address;
+      replicaWalletsResultDTOList.push({ publicKey, privateKey });
+    }
+    walletManager.wallets = replicaWallets;
+    await this.walletManagerRepository.save(walletManager);
+
+    return replicaWalletsResultDTOList;
+  }
+
+  private generateReplicaWallet(
     walletManager: WalletManager,
     mnemonic: MyMnemonic,
     index: number,
   ) {
-    const { publicKey, privateKey } = await this.walletProvider.deriveKeypair(
+    if(index < 1) throw Error('Index must be greater than 1');
+    const { publicKey, stakeKey, privateKey } = this.walletProvider.deriveKeypair(
       mnemonic,
       index,
     );
@@ -53,12 +103,13 @@ export class WalletService  {
 
     const wallet = new ReplicaWallet(
       publicKey.toString(),
+      stakeKey,
       privateKey.toString(),
       index
     );
     wallet.managed_by = walletManager
 
-    return { publicKey, privateKey };
+    return wallet;
   }
 
   async getUserPublicWalletInfo(userId: number): Promise<PublicWalletInfo> {

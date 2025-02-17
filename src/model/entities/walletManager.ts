@@ -1,12 +1,21 @@
-import {  IsNotEmpty } from 'class-validator';
-import {BaseEntity, Column, PrimaryColumn, OneToOne, JoinColumn, OneToMany, type Relation, Entity} from "typeorm";
+import { IsNotEmpty } from 'class-validator';
+import {
+    BaseEntity,
+    Column,
+    PrimaryColumn,
+    OneToOne,
+    JoinColumn,
+    OneToMany,
+    type Relation,
+    Entity,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import {User} from "./user";
 import { ReplicaWallet } from './wallet/replicaWallet';
 
 @Entity()
 export class WalletManager extends BaseEntity {
-    @PrimaryColumn()
-    @IsNotEmpty()
+    @PrimaryGeneratedColumn()
     id: number;
 
     @JoinColumn()
@@ -19,5 +28,9 @@ export class WalletManager extends BaseEntity {
 
     getReplicaCount(): number {
         return this.wallets.length;
+    }
+    constructor(user: User) {
+        super();
+        this.user = user;
     }
 }

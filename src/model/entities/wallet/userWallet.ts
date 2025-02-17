@@ -20,8 +20,8 @@ export class UserWallet extends Wallet {
     @IsNotEmpty()
     mnemonic: string;
 
-    constructor(address: string, mnemonic: string) {
-        super(address);
+    constructor(address: string,stake_address : string, mnemonic: string) {
+        super(address,stake_address);
         this.mnemonic = mnemonic;
     }
 

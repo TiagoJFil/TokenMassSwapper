@@ -16,10 +16,11 @@ export abstract class Wallet extends BaseEntity {
     @Column({ default: false })
     is_deleted: boolean;
 
-    constructor(address: string) {
+    constructor(address: string, stake_address : string) {
         super();
         this.is_deleted = false;
         this.address = address;
+        this.stake_address = stake_address;
     }
 }
 

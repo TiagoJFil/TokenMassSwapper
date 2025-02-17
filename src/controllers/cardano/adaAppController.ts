@@ -1,9 +1,10 @@
-import {Controller, Get, Injectable, Param, Post} from '@nestjs/common';
+import { Controller, Get, Injectable, Param, Post, Put } from '@nestjs/common';
 import { WalletService } from '../../services/wallet.service';
-import {UserWalletInfoOutput} from './dto/UserWalletInfoOutput';
+import { CreatedReplicasInfo, OutputDTOs, UserWalletCreateOutput } from './dto/OutputDTOs';
 import { CardanoTokenService } from '../../services/cardano/CardanoTokenService';
 import { UserService } from '../../services/user.service';
-import { UserWalletCreateOutput } from './dto/UserWalletCreateOutput';
+import { Transactional } from 'typeorm-transactional';
+import { ParseIntPipe } from '@nestjs/common';
 
 
 @Controller("ada")
@@ -13,6 +14,7 @@ export class AdaAppController {
               private readonly cardanoTokenService: CardanoTokenService) {}
 
   @Post("user/")
+  @Transactional()
   async createUserWallet(
     ): Promise<UserWalletCreateOutput> {
         const user = await this.userService.createUser();
@@ -23,13 +25,22 @@ export class AdaAppController {
 
   @Get("user/:user_id/wallet")
   async getUserWalletInfo(
-    @Param('user_id') user_id: number
-  ): Promise<UserWalletInfoOutput> {
+    @Param('user_id',ParseIntPipe) user_id: number
+  ): Promise<OutputDTOs> {
     const walletInfo = await this.walletService.getUserPublicWalletInfo(user_id);
     const AdaBalance = await this.cardanoTokenService.getAdaBalance(walletInfo.address);
     const tokenBalances = await this.cardanoTokenService.getTokenBalances(walletInfo.stakeKey);
     // @ts-ignore
-    return new UserWalletInfoOutput(walletInfo.address,AdaBalance, tokenBalances);
+    return new OutputDTOs(walletInfo.address,AdaBalance, tokenBalances);
+  }
+
+  @Put("user/:user_id/replicas/count/:count")
+  async setReplicaWallets(
+    @Param('user_id',ParseIntPipe) user_id: number,
+    @Param('count',ParseIntPipe) count: number
+  ): Promise<CreatedReplicasInfo> {
+    const replicas = await this.walletService.createReplicaWallets(user_id, count);
+    return new CreatedReplicasInfo(replicas);
   }
 
 }
