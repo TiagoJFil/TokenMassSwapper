@@ -11,11 +11,16 @@ import { BlockfrostConfigProvider, DexhunterConfigProvider, NetworkProvider } fr
 import { CardanoWalletProvider } from './services/cardano/provider/CardanoWalletProvider';
 import { ENV } from './utils/constants';
 import { UserService } from './services/user.service';
+import { WalletManager } from './model/entities/walletManager';
+import { addTransactionalDataSource } from 'typeorm-transactional';
+import { ReplicaWallet } from './model/entities/wallet/replicaWallet';
+import { DataSource } from 'typeorm';
+
+require('dotenv').config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
-    TypeOrmModule.forFeature([UserWallet]),
+    TypeOrmModule.forFeature([User,UserWallet,WalletManager,ReplicaWallet]),
   ],
   providers: [WalletService, CardanoWalletProvider,NetworkProvider],
   exports: [WalletService],
@@ -74,17 +79,28 @@ export class CardanoEndpointModule {}
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env[ENV.DB_HOST],
-      port: Number(process.env[ENV.DB_PORT]),
-      username: process.env[ENV.DB_USERNAME],
-      password: process.env[ENV.DB_PASSWORD],
-      database: process.env[ENV.DB_DATABASE],
-      autoLoadEntities: true,
-      logging: false,
-      synchronize: true,
-      entities: [__dirname + '/../entities/*{.ts,.js}', __dirname + '/../entities/**/*{.ts,.js}'],
+    TypeOrmModule.forRootAsync({
+      useFactory() {
+        return {
+          type: 'postgres',
+          host: process.env[ENV.DB_HOST],
+          port: Number(process.env[ENV.DB_PORT]),
+          username: process.env[ENV.DB_USERNAME],
+          password: process.env[ENV.DB_PASSWORD],
+          database: process.env[ENV.DB_DATABASE],
+          autoLoadEntities: true,
+          logging: false,
+          synchronize: true,
+          entities: [__dirname + '/../entities/*{.ts,.js}', __dirname + '/../entities/**/*{.ts,.js}'],
+        };
+      },
+      async dataSourceFactory(options) {
+        if (!options) {
+          throw new Error('Invalid options passed');
+        }
+
+        return addTransactionalDataSource(new DataSource(options));
+      },
     }),
     CardanoEndpointModule
   ],
