@@ -3,16 +3,16 @@ import { User } from '../model/entities/user';
 import { ReplicaWallet } from '../model/entities/wallet/replicaWallet';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BaseEntity, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { UserNotFoundException, WalletNotFoundException } from './exceptions';
 import { CardanoWalletProvider } from './cardano/provider/CardanoWalletProvider';
 
 import { PublicWalletInfo } from './dto';
 import { WalletManager } from '../model/entities/walletManager';
-import { Transactional } from 'typeorm-transactional';
+import { runOnTransactionCommit, runOnTransactionRollback, Transactional } from 'typeorm-transactional';
 
 @Injectable()
-export class WalletService  {
+export class WalletService {
   constructor(
     @InjectRepository(UserWallet)
     private userWalletRepository: Repository<UserWallet>,
@@ -20,11 +20,11 @@ export class WalletService  {
     private userRepository: Repository<User>,
     @InjectRepository(WalletManager)
     private walletManagerRepository: Repository<WalletManager>,
-    private readonly walletProvider: CardanoWalletProvider
+    private readonly walletProvider: CardanoWalletProvider,
   ) {}
 
   async createUserWallet(userId: number): Promise<UserWallet> {
-    const mnemonic = this.walletProvider.generateMnemonic()
+    const mnemonic = this.walletProvider.generateMnemonic();
 
     const user = await this.userRepository.findOneBy({ id: userId });
     //assert that user exists
@@ -32,7 +32,7 @@ export class WalletService  {
     const { publicKey, stakeKey, privateKey } =
       this.walletProvider.createUserKeyPair(mnemonic);
     //TODO: review what to do with the pk
-    const wallet = new UserWallet(publicKey.toString(),stakeKey, mnemonic);
+    const wallet = new UserWallet(publicKey.toString(), stakeKey, mnemonic);
     wallet.user = user;
     wallet.stake_address = stakeKey;
     user.wallet = wallet;
@@ -40,76 +40,73 @@ export class WalletService  {
     return await this.userWalletRepository.save(wallet);
   }
 
+  @Transactional()
   async setReplicaWallets(
     userId: number,
     count: number,
-  ): Promise<KeypairInfo[]> {
-    const user = await this.userRepository.findOneBy({ id: userId });
-    //assert that user exists
-    if (!user) throw new UserNotFoundException(userId);
-    const walletManager = await this.walletManagerRepository.findOneBy({ user: user });
-    if (!walletManager) {
+  ): Promise<PublicKeyInfo[]> {
+    //TODO limit count
+    try{
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['wallet', 'walletManager'],
+      });
+      if (!user) throw new UserNotFoundException(userId);
+      //create wallet manager if it doesn't exist
+      if (!user.walletManager) {
+        user.walletManager = new WalletManager();
+        user.walletManager.user = user;
+      }
+      runOnTransactionCommit(() => console.log('post created'));
+      runOnTransactionRollback((e) => console.log('post rolled back    ',e));
 
+      const walletsToGenerate = count - user.walletManager.currentReplicaAmount;
+
+      if (walletsToGenerate < 1) {
+        user.walletManager.currentReplicaAmount = count;
+        await this.userRepository.save(user);
+        return []; //TODO: return the wallets that already exist
+      }
+
+      const { replicaWallets, replicaWalletsResultDTOList } =
+        this.createReplicaWallets(user.wallet.mnemonic,user.walletManager.currentReplicaAmount, walletsToGenerate);
+      user.walletManager.currentReplicaAmount = count;
+      const savedWallets = await user.walletManager.wallets;
+      if (!savedWallets) {
+        user.walletManager.wallets = replicaWallets;
+      }else{
+        user.walletManager.wallets = savedWallets.concat(replicaWallets);
+      }
+      await this.userRepository.save(user);
+
+      return replicaWalletsResultDTOList;
+    }catch(err){
+      throw err;
     }
   }
 
-
-  @Transactional()
-  async createReplicaWallets(
-    userId: number,
-    count: number,
-  ): Promise<KeypairInfo[]> {
-    const user = await this.userRepository.findOneBy({ id: userId });
-    //assert that user exists
-    if (!user) throw new UserNotFoundException(userId);
-    const userMnemonic = (await this.userWalletRepository.findOneBy({ user: user })).mnemonic;
-
-
-    const walletManager = await this.walletManagerRepository.save(new WalletManager(user));
-    const replicaWallets = [];
+  private createReplicaWallets(userMnemonic: string,startingIdx:number, count: number) {
+    const replicaWallets: ReplicaWallet[] = [];
     const replicaWalletsResultDTOList = [];
 
-    for (let i = 1; i < count +1; i++) {
-      const replicaWallet = this.generateReplicaWallet(
-        walletManager,
-        userMnemonic,
-        i,
-      );
+    for (let i = startingIdx +1; i < count + startingIdx +1; i++) {
+      const replicaWallet = this.generateReplicaWallet(userMnemonic, i);
       replicaWallets.push(replicaWallet);
       const publicKey = replicaWallet.address;
-      const privateKey = replicaWallet.privateKey;
-      const stakeKey = replicaWallet.stake_address;
-      replicaWalletsResultDTOList.push({ publicKey, privateKey });
+      replicaWalletsResultDTOList.push({ publicKey });
     }
-    walletManager.wallets = replicaWallets;
-    await this.walletManagerRepository.save(walletManager);
 
-    return replicaWalletsResultDTOList;
+    return { replicaWallets, replicaWalletsResultDTOList };
   }
 
-  private generateReplicaWallet(
-    walletManager: WalletManager,
-    mnemonic: MyMnemonic,
-    index: number,
-  ) {
-    if(index < 1) throw Error('Index must be greater than 1');
-    const { publicKey, stakeKey, privateKey } = this.walletProvider.deriveKeypair(
-      mnemonic,
-      index,
-    );
-    //save to db
-
-    console.log(privateKey);
-
-    const wallet = new ReplicaWallet(
-      publicKey.toString(),
-      stakeKey,
-      privateKey.toString(),
-      index
-    );
-    wallet.managed_by = walletManager
-
-    return wallet;
+  async getReplicasCount(userId: number): Promise<number> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    //assert that user exists
+    if (!user) throw new UserNotFoundException(userId);
+    return await this.walletManagerRepository
+      .createQueryBuilder('walletManager')
+      .where('walletManager.user.id = :id', { id: userId })
+      .getCount();
   }
 
   async getUserPublicWalletInfo(userId: number): Promise<PublicWalletInfo> {
@@ -124,6 +121,19 @@ export class WalletService  {
     if (!userWallet) throw new WalletNotFoundException('User has no wallet');
     return new PublicWalletInfo(userWallet.address, userWallet.stake_address);
   }
+  private generateReplicaWallet(mnemonic: MyMnemonic, index: number) {
+    if (index < 1) throw Error('Index must be greater than 1');
+    const { publicKey, stakeKey, privateKey } =
+      this.walletProvider.deriveKeypair(mnemonic, index);
+
+    return new ReplicaWallet(
+      publicKey.toString(),
+      stakeKey,
+      privateKey.toString(),
+      index,
+    );
+  }
+
 }
 
 /*

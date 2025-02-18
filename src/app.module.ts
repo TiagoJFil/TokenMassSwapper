@@ -11,16 +11,17 @@ import { BlockfrostConfigProvider, DexhunterConfigProvider, NetworkProvider } fr
 import { CardanoWalletProvider } from './services/cardano/provider/CardanoWalletProvider';
 import { ENV } from './utils/constants';
 import { UserService } from './services/user.service';
-import { WalletManager } from './model/entities/walletManager';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { ReplicaWallet } from './model/entities/wallet/replicaWallet';
 import { DataSource } from 'typeorm';
+import { Wallet } from './model/entities/wallet/wallet';
+import { WalletManager } from './model/entities/walletManager';
 
 require('dotenv').config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User,UserWallet,WalletManager,ReplicaWallet]),
+    TypeOrmModule.forFeature([User,UserWallet,WalletManager,ReplicaWallet,Wallet]),
   ],
   providers: [WalletService, CardanoWalletProvider,NetworkProvider],
   exports: [WalletService],

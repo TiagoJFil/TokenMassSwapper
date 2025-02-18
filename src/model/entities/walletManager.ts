@@ -23,14 +23,16 @@ export class WalletManager extends BaseEntity {
     user: Relation<User>;
 
     @JoinColumn()
-    @OneToMany(() => ReplicaWallet, wallet => wallet.managed_by)
+    @OneToMany(() => ReplicaWallet,
+        wallet => wallet.managed_by, { cascade: true,  lazy: true })
     wallets: Relation<ReplicaWallet[]>;
 
-    getReplicaCount(): number {
-        return this.wallets.length;
-    }
-    constructor(user: User) {
+    @Column({default: 0})
+    @IsNotEmpty() //not the length of wallets, as wallets are just the wallets that the user has(no wallet is deleted), not the amount of replicas
+    currentReplicaAmount: number;
+
+    constructor() {
         super();
-        this.user = user;
+        this.currentReplicaAmount = 0;
     }
 }

@@ -39,8 +39,14 @@ export class AdaAppController {
     @Param('user_id',ParseIntPipe) user_id: number,
     @Param('count',ParseIntPipe) count: number
   ): Promise<CreatedReplicasInfo> {
-    const replicas = await this.walletService.createReplicaWallets(user_id, count);
+    const replicas = await this.walletService.setReplicaWallets(user_id, count);
     return new CreatedReplicasInfo(replicas);
   }
 
+  @Get("user/:user_id/replicas/count")
+  async getReplicasCount(
+    @Param('user_id',ParseIntPipe) user_id: number
+  ): Promise<number> {
+    return await this.walletService.getReplicasCount(user_id);
+  }
 }

@@ -3,10 +3,11 @@ import {
     Column,
     JoinColumn,
     ManyToOne,
-    type Relation, ChildEntity,
+    type Relation, ChildEntity, ManyToMany, JoinTable,
 } from 'typeorm';
-import { WalletManager } from "../walletManager";
 import { Wallet } from "./wallet";
+import { User } from '../user';
+import { WalletManager } from '../walletManager';
 
 
 @Entity()

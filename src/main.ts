@@ -1,14 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import  dotenv  from 'dotenv';
-import { initializeTransactionalContext } from 'typeorm-transactional';
+import { initializeTransactionalContext, StorageDriver } from 'typeorm-transactional';
 import { ValidationPipe } from '@nestjs/common';
 
 
 
 
 async function bootstrap() {
-  initializeTransactionalContext()
+  initializeTransactionalContext({ storageDriver: StorageDriver.AUTO })
 
   const app = await NestFactory.create(AppModule,{
     abortOnError: true

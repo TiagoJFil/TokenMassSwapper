@@ -10,6 +10,6 @@ export class UserWalletCreateOutput {
 }
 
 export class CreatedReplicasInfo {
-  constructor(public replicas: KeypairInfo[]) {
+  constructor(public replicas: PublicKeyInfo[]) {
   }
 }

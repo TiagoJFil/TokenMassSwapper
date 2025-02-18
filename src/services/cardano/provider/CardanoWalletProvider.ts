@@ -9,7 +9,7 @@ import { Address, BaseAddress, RewardAddress } from '@emurgo/cardano-serializati
 @Injectable()
 export class CardanoWalletProvider {
 
-  private network_id ;
+  private network_id : number ;
 
   constructor(
     @Inject(NESTJS.IS_MAINNET_PROVIDER_KEY)
