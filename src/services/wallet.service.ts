@@ -103,10 +103,12 @@ export class WalletService {
     const user = await this.userRepository.findOneBy({ id: userId });
     //assert that user exists
     if (!user) throw new UserNotFoundException(userId);
-    return await this.walletManagerRepository
+
+    return (await this.walletManagerRepository
       .createQueryBuilder('walletManager')
       .where('walletManager.user.id = :id', { id: userId })
-      .getCount();
+      .select('walletManager.currentReplicaAmount')
+      .getOne()).currentReplicaAmount
   }
 
   async getUserPublicWalletInfo(userId: number): Promise<PublicWalletInfo> {
