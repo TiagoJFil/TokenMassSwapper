@@ -23,9 +23,13 @@ export class ReplicaWallet extends Wallet {
     @Column()
     privateKey: string;
 
-    constructor(address: string,stake_address: string, privateKey: string, index: number) {
+    @Column()
+    stakePrivateKey: string;
+
+    constructor(address: string,stake_address: string, privateKey: string, stakePrivateKey : string, index: number) {
         super(address,stake_address);
         this.privateKey = privateKey;
+        this.stakePrivateKey = stakePrivateKey;
         this.index =index
     }
 }

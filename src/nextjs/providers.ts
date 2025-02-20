@@ -28,7 +28,7 @@ export const BlockfrostConfigProvider: Provider = {
       throw new NotFoundEnvVarError(ENV.BLOCKFROST_API_KEY);
     }
     let network;
-    if (is_blockfrost_mainnet.toLowerCase() == "true") {
+    if (is_blockfrost_mainnet.toLowerCase() === "true") {
       network = 'mainnet';
     } else {
       network = 'preview';
@@ -40,6 +40,6 @@ export const BlockfrostConfigProvider: Provider = {
 export const NetworkProvider: Provider = {
   provide: NESTJS.IS_MAINNET_PROVIDER_KEY,
   useFactory: () => {
-      return process.env[ENV.IS_MAINNET];
+      return process.env[ENV.IS_MAINNET].toLowerCase() === "true";
   },
 };

@@ -4,7 +4,7 @@ import { ReplicaWallet } from '../model/entities/wallet/replicaWallet';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserNotFoundException, WalletNotFoundException } from './exceptions';
+import { UserNotFoundException, WalletManagerNotFoundException, WalletNotFoundException } from './exceptions';
 import { CardanoWalletProvider } from './cardano/provider/CardanoWalletProvider';
 
 import { PublicWalletInfo } from './dto';
@@ -29,15 +29,46 @@ export class WalletService {
     const user = await this.userRepository.findOneBy({ id: userId });
     //assert that user exists
     if (!user) throw Error('User not found');
-    const { publicKey, stakeKey, privateKey } =
+    const { publicKey, stakeKey, privateKey, stakePrivateKey } =
       this.walletProvider.createUserKeyPair(mnemonic);
     //TODO: review what to do with the pk
     const wallet = new UserWallet(publicKey.toString(), stakeKey, mnemonic);
     wallet.user = user;
-    wallet.stake_address = stakeKey;
+    wallet.stakeAddress = stakeKey;
     user.wallet = wallet;
     await this.userRepository.save(user);
     return await this.userWalletRepository.save(wallet);
+  }
+
+  async getUserWallet(userId: number): Promise<UserWallet> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    //assert that user exists
+    if (!user) throw new UserNotFoundException(userId);
+
+    const userWallet = await this.userWalletRepository.findOneBy({
+      user: user,
+    });
+    //assert that user has a wallet
+    if (!userWallet) throw new WalletNotFoundException('User has no wallet');
+    return userWallet;
+  }
+
+  async getActiveReplicaWallets(userId: number): Promise<ReplicaWallet[]> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    //assert that user exists
+    if (!user) throw new UserNotFoundException(userId);
+
+    const walletManager = await this.walletManagerRepository.findOne({
+      where: { user: user },
+      relations: ['wallets'],
+    });
+    //assert that user has a wallet manager
+    if (!walletManager) throw new WalletManagerNotFoundException('User has not created any replicas');
+    if (walletManager.currentReplicaAmount < 1) return [];
+    else {
+      const replicaWallets = await walletManager.wallets;
+      return replicaWallets.slice(0, walletManager.currentReplicaAmount);
+    }
   }
 
   @Transactional()
@@ -121,77 +152,21 @@ export class WalletService {
     });
     //assert that user has a wallet
     if (!userWallet) throw new WalletNotFoundException('User has no wallet');
-    return new PublicWalletInfo(userWallet.address, userWallet.stake_address);
+    return new PublicWalletInfo(userWallet.address, userWallet.stakeAddress);
   }
+
   private generateReplicaWallet(mnemonic: MyMnemonic, index: number) {
     if (index < 1) throw Error('Index must be greater than 1');
-    const { publicKey, stakeKey, privateKey } =
+    const { publicKey, stakeKey, privateKey, stakePrivateKey } =
       this.walletProvider.deriveKeypair(mnemonic, index);
 
     return new ReplicaWallet(
       publicKey.toString(),
       stakeKey,
       privateKey.toString(),
+      stakePrivateKey.toString(),
       index,
     );
   }
 
 }
-
-/*
-
-export default class WalletService extends EventEmitter {
-
-
-  async create (password: string) {
-    const mnemonic = Mnemonic.random(24)
-    await this.import(mnemonic.phrase, password)
-
-    return mnemonic.phrase
-  }
-
-  async import (mnemonics: string, password: string) {
-    if (!Mnemonic.validate(mnemonics)) throw Error('Invalid mnemonic')
-  
-    await LocalStorage.set("wallet", {
-      encryptedKey: encryptXChaCha20Poly1305(mnemonics, password),
-      accounts: [{
-        name: "Wallet",
-        receiveCount: 1,
-        changeCount: 1      
-      }]
-    })
-
-    await this.unlock(0, password)
-    await this.sync()
-  }
-
-  async unlock (id: number, password: string) {
-    const mnemonic = new Mnemonic(await this.export(password))
-    const extendedKey = new XPrv(mnemonic.toSeed())
-    const publicKey = await PublicKeyGenerator.fromMasterXPrv(
-      extendedKey,
-      false,
-      BigInt(id)
-    )
-    
-    await SessionStorage.set('session', {
-      activeAccount: id,
-      publicKey: publicKey.toString(),
-      encryptedKey: encryptXChaCha20Poly1305(extendedKey.toString(), password)
-    })
-
-    await this.sync()
-  }
-
-  async export (password: string) {
-    const wallet = await LocalStorage.get('wallet', undefined)
-
-    if (!wallet) throw Error('Wallet is not initialized')
-
-    return decryptXChaCha20Poly1305(wallet.encryptedKey, password)
-  }
-
-}
-  //IGNORE
-  */

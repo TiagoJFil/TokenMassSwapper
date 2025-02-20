@@ -11,7 +11,7 @@ export abstract class Wallet extends BaseEntity {
 
     @IsNotEmpty()
     @Column()
-    stake_address: string;
+    stakeAddress: string;
 
     @Column({ default: false })
     is_deleted: boolean;
@@ -20,7 +20,7 @@ export abstract class Wallet extends BaseEntity {
         super();
         this.is_deleted = false;
         this.address = address;
-        this.stake_address = stake_address;
+        this.stakeAddress = stake_address;
     }
 }
 
