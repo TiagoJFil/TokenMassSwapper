@@ -14,8 +14,9 @@
 
 
 import * as url from "url";
-import * as portableFetch from "portable-fetch";
 import { Configuration } from "./configuration";
+import fetchFetchApi from './fetchFetchApi';
+import { DexHunterApiError } from './exceptions';
 
 const BASE_PATH = "https://api-us.dexhunterv3.app".replace(/\/+$/, "");
 
@@ -58,7 +59,7 @@ export interface FetchArgs {
 export class BaseAPI {
     protected configuration?: Configuration;
 
-    constructor(configuration?: Configuration, protected basePath: string = BASE_PATH, protected fetch: FetchAPI = portableFetch) {
+    constructor(configuration?: Configuration, protected basePath: string = BASE_PATH, protected fetch: FetchAPI = fetchFetchApi) {
         if (configuration) {
             this.configuration = configuration;
             this.basePath = configuration.basePath || this.basePath;
@@ -1005,25 +1006,23 @@ export interface DtoSwapObject {
      * @type {number}
      * @memberof DtoSwapObject
      */
-    amountIn: number;
+    amount_in: number;
     /**
      * 
      * @type {Array<string>}
      * @memberof DtoSwapObject
      */
-    blacklistedDexes?: Array<string>;
+    blacklisted_dexes?: Array<string>;
     /**
      * 
      * @type {string}
      * @memberof DtoSwapObject
      */
-    buyerAddress: string;
+    buyer_address: string;
 
     referrer?: string;
 
-    blackListedDexes?: Array<string>;
-
-    txOptimization : boolean;
+    tx_optimization : boolean;
     /**
      * 
      * @type {Array<string>}
@@ -1041,13 +1040,13 @@ export interface DtoSwapObject {
      * @type {string}
      * @memberof DtoSwapObject
      */
-    tokenIn: string;
+    token_in: string;
     /**
      * 
      * @type {string}
      * @memberof DtoSwapObject
      */
-    tokenOut: string;
+    token_out: string;
 }
 
 /**
@@ -1673,7 +1672,7 @@ export const ChartsApiFp = function(configuration?: Configuration) {
          */
         chartsPost(body: ModelsChartRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<ModelsOptimChartResponse> {
             const localVarFetchArgs = ChartsApiFetchParamCreator(configuration).chartsPost(body, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -1884,7 +1883,7 @@ export const DCAApiFp = function(configuration?: Configuration) {
          */
         dcaAddressGet(address: string, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Array<DcascDcaResponse>> {
             const localVarFetchArgs = DCAApiFetchParamCreator(configuration).dcaAddressGet(address, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -1903,7 +1902,7 @@ export const DCAApiFp = function(configuration?: Configuration) {
          */
         dcaCancelPost(request: DcascCancelDCARequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<{ [key: string]: string; }> {
             const localVarFetchArgs = DCAApiFetchParamCreator(configuration).dcaCancelPost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -1922,7 +1921,7 @@ export const DCAApiFp = function(configuration?: Configuration) {
          */
         dcaCreatePost(request: DcascCreateDCARequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DcascCreateDCAResponse> {
             const localVarFetchArgs = DCAApiFetchParamCreator(configuration).dcaCreatePost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -1941,7 +1940,7 @@ export const DCAApiFp = function(configuration?: Configuration) {
          */
         dcaEstimatePost(request: DcascCreateDCARequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DcascCreateDCAResponse> {
             const localVarFetchArgs = DCAApiFetchParamCreator(configuration).dcaEstimatePost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2119,7 +2118,7 @@ export const MarkersApiFp = function(configuration?: Configuration) {
          */
         markingSubmitPost(request: MarkersMarkerBody, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<string> {
             const localVarFetchArgs = MarkersApiFetchParamCreator(configuration).markingSubmitPost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2459,9 +2458,9 @@ if (configuration && configuration.partnerToken) {
             const localVarQueryParameter = {} as any;
 
             localVarHeaderParameter['Content-Type'] = 'application/json';
-if (configuration && configuration.partnerToken) {
-    localVarHeaderParameter[PartnerHeader] = configuration.partnerToken;
-}
+            if (configuration && configuration.partnerToken) {
+                localVarHeaderParameter[PartnerHeader] = configuration.partnerToken;
+            }
 
             localVarUrlObj.query = Object.assign({}, localVarUrlObj.query, localVarQueryParameter, options.query);
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
@@ -2527,7 +2526,7 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapAveragePriceTokenInIdTokenOutIdGet(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<{ [key: string]: number; }> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapAveragePriceTokenInIdTokenOutIdGet(options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2546,7 +2545,7 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapCancelPost(request: DtoCancelRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DtoCancelResponse> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapCancelPost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2565,7 +2564,7 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapEstimatePost(request: DtoEstimateRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DtoEstimateResponse> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapEstimatePost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2584,7 +2583,7 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapLimitEstimatePost(request: DtoLimitOrderRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DtoLimitOrderEstimate> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapLimitEstimatePost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2603,7 +2602,7 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapLimitPost(request: DtoLimitOrderRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DtoLimitOrderResponse> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapLimitPost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2622,7 +2621,7 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapOrdersUserAddressGet(userAddress: string, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Array<ModelsApiOrder>> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapOrdersUserAddressGet(userAddress, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2641,7 +2640,7 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapReverseEstimatePost(request: DtoReverseEstimationRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DtoReverseEstimateResponse> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapReverseEstimatePost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
@@ -2660,12 +2659,26 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapSignPost(request: DtoSubmissionModel, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DtoSignatureResponse> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapSignPost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
-                        return response.json();
+                        try {
+                            return response.json();
+                        } catch (e) {
+                            console.log(e)
+                            throw new DexHunterApiError(e)
+                        }
                     } else {
-                        throw response;
+                        if (response.headers.get('Content-Type') === 'application/json') {
+                            return Promise.resolve(response.json()).then((data) => {
+                                throw new DexHunterApiError(data)
+                            })
+                        }
+                        else {
+                            return Promise.resolve(response.text()).then((data) => {
+                                throw new DexHunterApiError(data)
+                            })
+                        }
                     }
                 });
             };
@@ -2679,12 +2692,26 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapBuildPost(request: DtoSwapObject, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DtoSwapResponse> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapBuildPost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
-                        return response.json();
+                        try {
+                            return response.json();
+                        } catch (e) {
+                            console.log(e)
+                            throw new DexHunterApiError(e)
+                        }
                     } else {
-                        throw response;
+                        if (response.headers.get('Content-Type') === 'application/json') {
+                            return Promise.resolve(response.json()).then((data) => {
+                                throw new DexHunterApiError(data)
+                            })
+                        }
+                        else {
+                            return Promise.resolve(response.text()).then((data) => {
+                                throw new DexHunterApiError(data)
+                            })
+                        }
                     }
                 });
             };
@@ -2698,7 +2725,7 @@ export const SwapApiFp = function(configuration?: Configuration) {
          */
         swapWalletPost(request: DtoWallet, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<DtoWalletInfoResponse> {
             const localVarFetchArgs = SwapApiFetchParamCreator(configuration).swapWalletPost(request, options);
-            return (fetch: FetchAPI = portableFetch, basePath: string = BASE_PATH) => {
+            return (fetch: FetchAPI , basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.json();
