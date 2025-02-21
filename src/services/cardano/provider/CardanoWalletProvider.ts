@@ -46,20 +46,31 @@ export class CardanoWalletProvider {
       .derive(0)
       .to_public();
 
+    const utxoPrivateKey = accountKey
+      .derive(0) // external
+      .derive(0)
+      .to_raw_key();
+
     const stakeKey = accountKey
       .derive(2) // chimeric
       .derive(0)
       .to_public();
+
+    const stakingPrivateKey =  accountKey
+      .derive(2) // chimeric
+      .derive(0)
+      .to_raw_key();
 
     const baseAddr = CardanoWasm.BaseAddress.new(
       this.network_id,
       CardanoWasm.StakeCredential.from_keyhash(utxoPubKey.to_raw_key().hash()),
       CardanoWasm.StakeCredential.from_keyhash(stakeKey.to_raw_key().hash()),
     );
-    const stake = RewardAddress.new(this.network_id, baseAddr.stake_cred()).to_address().to_bech32();
+
+    const stake = RewardAddress.new(this.network_id, baseAddr.stake_cred())
 
 
-    return { publicKey: baseAddr.to_address().to_bech32(), stakeKey: stake , privateKey: accountKey.to_raw_key().to_bech32() };
+    return { publicKey: baseAddr.to_address().to_bech32(), stakeKey: stake.to_address().to_bech32(), privateKey: utxoPrivateKey.to_bech32(), stakePrivateKey: stakingPrivateKey.to_bech32() };
   }
 
 
@@ -71,8 +82,5 @@ export class CardanoWalletProvider {
     );
   }
 
-  private bech32_encode(data: Uint8Array, prefix: string): string {
-    const words = bech32.toWords(data);
-    return bech32.encode(prefix, words);
-  }
+
 }
