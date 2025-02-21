@@ -7,6 +7,11 @@ export class NESTJS {
     public static BLOCKFROST_CONFIG_PROVIDER_KEY = 'BLOCKFROST_CONFIG'
 }
 
+export class CARDANO {
+    public static ADA_POLICY_ID = ""
+    public static WALLET_MIN_BALANCE = 10
+}
+
 export class ENV {
     public static IS_MAINNET = 'IS_MAINNET'
     public static DEXHUNTER_API_BASE_URL = 'DEXHUNTER_API_BASE_URL'

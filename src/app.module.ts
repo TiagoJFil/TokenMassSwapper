@@ -16,6 +16,7 @@ import { ReplicaWallet } from './model/entities/wallet/replicaWallet';
 import { DataSource } from 'typeorm';
 import { Wallet } from './model/entities/wallet/wallet';
 import { WalletManager } from './model/entities/walletManager';
+import { TransactionController } from './controllers/cardano/txController';
 
 require('dotenv').config();
 
@@ -52,13 +53,13 @@ export class BlockFrostModule {}
 
 @Module({
   imports: [],
-  providers: [DexhunterConfigProvider, DexHunterService],
+  providers: [DexhunterConfigProvider,BlockfrostConfigProvider, DexHunterService],
   exports: [DexHunterService],
 })
 export class DexHunterModule {}
 
 @Module({
-  imports: [BlockFrostModule, DexHunterModule],
+  imports: [BlockFrostModule, DexHunterModule,WalletModule],
   providers: [CardanoTokenService],
   exports: [CardanoTokenService],
 })
@@ -72,7 +73,7 @@ export class CardanoModule {}
 export class UserModule {}
 
 @Module({
-  controllers: [AdaAppController],
+  controllers: [AdaAppController,TransactionController],
   imports: [WalletModule, CardanoModule,UserModule],
 })
 export class CardanoEndpointModule {}

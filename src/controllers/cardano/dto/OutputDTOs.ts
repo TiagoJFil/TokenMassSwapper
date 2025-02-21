@@ -13,3 +13,8 @@ export class CreatedReplicasInfo {
   constructor(public replicas: PublicKeyInfo[]) {
   }
 }
+
+export class BuyTransactionOutput {
+  constructor(public token: string, public amount: number, public price: number, public cost: number) {
+  }
+}

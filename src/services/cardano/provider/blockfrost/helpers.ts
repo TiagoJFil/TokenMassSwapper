@@ -1,6 +1,7 @@
 import * as CardanoWasm from '@emurgo/cardano-serialization-lib-nodejs';
 import { Responses } from '@blockfrost/blockfrost-js';
 import { UTXO } from './BlockFrostConfig';
+import { bech32 } from 'bech32';
 
 export const composeTransaction = (
   address: string,
@@ -102,3 +103,39 @@ export const signTransaction = (
 
   return transaction;
 };
+
+export const getSignaturesForCBOR = (
+  cbor: string,
+  ...keys: string[]
+): string => {
+  const tx = CardanoWasm.Transaction.from_bytes(Buffer.from(cbor, 'hex'));
+  const txHash = CardanoWasm.hash_transaction(tx.body());
+  const witnessSet = CardanoWasm.TransactionWitnessSet.new();
+  const vkeyWitnesses = CardanoWasm.Vkeywitnesses.new();
+
+  keys.forEach((key) => {
+    const PrivKey = CardanoWasm.PrivateKey.from_bech32(key);
+    const vkeyWitness = CardanoWasm.make_vkey_witness(txHash, PrivKey);
+    vkeyWitnesses.add(vkeyWitness);
+  });
+  witnessSet.set_vkeys(vkeyWitnesses);
+  return Buffer.from(witnessSet.to_bytes()).toString('hex');
+};
+
+export const signTransactionFromCBOR = (
+  cbor: string,
+  ...keys: string[]
+): string => {
+  const signatures = getSignaturesForCBOR(cbor, ...keys);
+  const tx = CardanoWasm.Transaction.from_bytes(Buffer.from(cbor, 'hex'));
+  return CardanoWasm.Transaction.new(
+      tx.body(),
+      CardanoWasm.TransactionWitnessSet.from_bytes(Buffer.from(signatures, 'hex')),
+    ).to_hex()
+
+}
+
+export const bech32_encode = (data: Uint8Array, prefix: string) => {
+  const words = bech32.toWords(data);
+  return bech32.encode(prefix, words);
+}
