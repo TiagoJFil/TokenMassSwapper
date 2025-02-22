@@ -12,6 +12,24 @@ export class CARDANO {
     public static WALLET_MIN_BALANCE = 10
 }
 
+
+export class TOKEN_BUY_WEIGHTS {
+    public static SIMPLE = {
+        0.3: 25,
+        0.2: 69,
+        0.06: 100,
+        0.11: 50,
+        0.19: 40,
+        0.14: 30
+    }
+}
+
+export class TOKEN_BUY_HYPED_VALUES{
+    public static START = 25
+    public static MID = 50
+    public static END = 100
+}
+
 export class ENV {
     public static IS_MAINNET = 'IS_MAINNET'
     public static DEXHUNTER_API_BASE_URL = 'DEXHUNTER_API_BASE_URL'

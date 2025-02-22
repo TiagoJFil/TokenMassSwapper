@@ -1,7 +1,7 @@
-import { PublicKeyInfo } from '../../../services/types';
+import { AssetInfo, PublicKeyInfo } from '../../../services/types';
 
 export class OutputDTOs {
-  constructor(public address: string, public ADA: string, public tokens : string) {
+  constructor(public address: string, public ADA: number, public tokens : AssetInfo[]) {
   }
 }
 

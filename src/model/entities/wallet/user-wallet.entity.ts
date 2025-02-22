@@ -5,16 +5,16 @@ import {
     JoinColumn,
     type Relation, ChildEntity,
 } from 'typeorm';
-import { User } from "../user";
-import { Wallet } from "./wallet";
+import { UserEntity } from "../user.entity";
+import { WalletEntity } from "./wallet.entity";
 import { IsNotEmpty } from "class-validator";
 
 @Entity()
-export class UserWallet extends Wallet {
+export class UserWalletEntity extends WalletEntity {
 
-    @OneToOne(() => User, user => user.wallet, { lazy: true })
+    @OneToOne(() => UserEntity, user => user.wallet, { lazy: true })
     @JoinColumn() 
-    user: Relation<User>;
+    user: Relation<UserEntity>;
 
     @Column()
     @IsNotEmpty()

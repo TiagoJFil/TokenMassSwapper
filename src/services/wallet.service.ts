@@ -1,37 +1,37 @@
-import { UserWallet } from '../model/entities/wallet/userWallet';
-import { User } from '../model/entities/user';
-import { ReplicaWallet } from '../model/entities/wallet/replicaWallet';
+import { UserWalletEntity } from '../model/entities/wallet/user-wallet.entity';
+import { UserEntity } from '../model/entities/user.entity';
+import { ReplicaWalletEntity } from '../model/entities/wallet/replica-wallet.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserNotFoundException, WalletManagerNotFoundException, WalletNotFoundException } from './exceptions/generic';
 import { CardanoWalletProviderService } from './cardano/provider/cardano-wallet-provider.service';
-import { WalletManager } from '../model/entities/walletManager';
+import { WalletManagerEntity } from '../model/entities/wallet-manager.entity';
 import { runOnTransactionCommit, runOnTransactionRollback, Transactional } from 'typeorm-transactional';
 import { MyMnemonic, PublicKeyInfo, PublicWalletInfo } from './types';
 
 @Injectable()
 export class WalletService {
   constructor(
-    @InjectRepository(UserWallet)
-    private userWalletRepository: Repository<UserWallet>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(WalletManager)
-    private walletManagerRepository: Repository<WalletManager>,
+    @InjectRepository(UserWalletEntity)
+    private userWalletRepository: Repository<UserWalletEntity>,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+    @InjectRepository(WalletManagerEntity)
+    private walletManagerRepository: Repository<WalletManagerEntity>,
     private readonly walletProvider: CardanoWalletProviderService,
   ) {}
 
-  async createUserWallet(userId: number): Promise<UserWallet> {
+  async createUserWallet(userId: number): Promise<UserWalletEntity> {
     const mnemonic = this.walletProvider.generateMnemonic();
 
     const user = await this.userRepository.findOneBy({ id: userId });
     //assert that user exists
-    if (!user) throw Error('User not found');
+    if (!user) throw Error('UserEntity not found');
     const { publicKey, stakeKey, privateKey, stakePrivateKey } =
       this.walletProvider.createUserKeyPair(mnemonic);
     //TODO: review what to do with the pk
-    const wallet = new UserWallet(publicKey.toString(), stakeKey, mnemonic);
+    const wallet = new UserWalletEntity(publicKey.toString(), stakeKey, mnemonic);
     wallet.user = user;
     wallet.stakeAddress = stakeKey;
     user.wallet = wallet;
@@ -39,7 +39,7 @@ export class WalletService {
     return await this.userWalletRepository.save(wallet);
   }
 
-  async getUserWallet(userId: number): Promise<UserWallet> {
+  async getUserWallet(userId: number): Promise<UserWalletEntity> {
     const user = await this.userRepository.findOneBy({ id: userId });
     //assert that user exists
     if (!user) throw new UserNotFoundException(userId);
@@ -48,11 +48,11 @@ export class WalletService {
       user: user,
     });
     //assert that user has a wallet
-    if (!userWallet) throw new WalletNotFoundException('User has no wallet');
+    if (!userWallet) throw new WalletNotFoundException('UserEntity has no wallet');
     return userWallet;
   }
 
-  async getActiveReplicaWallets(userId: number): Promise<ReplicaWallet[]> {
+  async getActiveReplicaWallets(userId: number): Promise<ReplicaWalletEntity[]> {
     const user = await this.userRepository.findOneBy({ id: userId });
     //assert that user exists
     if (!user) throw new UserNotFoundException(userId);
@@ -62,7 +62,7 @@ export class WalletService {
       relations: ['wallets'],
     });
     //assert that user has a wallet manager
-    if (!walletManager) throw new WalletManagerNotFoundException('User has not created any replicas');
+    if (!walletManager) throw new WalletManagerNotFoundException('UserEntity has not created any replicas');
     if (walletManager.currentReplicaAmount < 1) return [];
     else {
       const replicaWallets = await walletManager.wallets;
@@ -84,7 +84,7 @@ export class WalletService {
       if (!user) throw new UserNotFoundException(userId);
       //create wallet manager if it doesn't exist
       if (!user.walletManager) {
-        user.walletManager = new WalletManager();
+        user.walletManager = new WalletManagerEntity();
         user.walletManager.user = user;
       }
       runOnTransactionCommit(() => console.log('post created'));
@@ -115,19 +115,6 @@ export class WalletService {
     }
   }
 
-  private createReplicaWallets(userMnemonic: string,startingIdx:number, count: number) {
-    const replicaWallets: ReplicaWallet[] = [];
-    const replicaWalletsResultDTOList = [];
-
-    for (let i = startingIdx +1; i < count + startingIdx +1; i++) {
-      const replicaWallet = this.generateReplicaWallet(userMnemonic, i);
-      replicaWallets.push(replicaWallet);
-      const publicKey = replicaWallet.address;
-      replicaWalletsResultDTOList.push({ publicKey });
-    }
-
-    return { replicaWallets, replicaWalletsResultDTOList };
-  }
 
   async getReplicasCount(userId: number): Promise<number> {
     const user = await this.userRepository.findOneBy({ id: userId });
@@ -150,8 +137,22 @@ export class WalletService {
       user: user,
     });
     //assert that user has a wallet
-    if (!userWallet) throw new WalletNotFoundException('User has no wallet');
+    if (!userWallet) throw new WalletNotFoundException('UserEntity has no wallet');
     return { address: userWallet.address, stakeKey: userWallet.stakeAddress};
+  }
+
+  private createReplicaWallets(userMnemonic: string,startingIdx:number, count: number) {
+    const replicaWallets: ReplicaWalletEntity[] = [];
+    const replicaWalletsResultDTOList = [];
+
+    for (let i = startingIdx +1; i < count + startingIdx +1; i++) {
+      const replicaWallet = this.generateReplicaWallet(userMnemonic, i);
+      replicaWallets.push(replicaWallet);
+      const publicKey = replicaWallet.address;
+      replicaWalletsResultDTOList.push({ publicKey });
+    }
+
+    return { replicaWallets, replicaWalletsResultDTOList };
   }
 
   private generateReplicaWallet(mnemonic: MyMnemonic, index: number) {
@@ -159,7 +160,7 @@ export class WalletService {
     const { publicKey, stakeKey, privateKey, stakePrivateKey } =
       this.walletProvider.deriveKeypair(mnemonic, index);
 
-    return new ReplicaWallet(
+    return new ReplicaWalletEntity(
       publicKey.toString(),
       stakeKey,
       privateKey.toString(),

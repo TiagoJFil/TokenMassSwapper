@@ -2341,9 +2341,9 @@ if (configuration && configuration.partnerToken) {
             };
         },
         /**
-         * Get User Orders
-         * @summary Get User Orders
-         * @param {string} userAddress User Address
+         * Get UserEntity Orders
+         * @summary Get UserEntity Orders
+         * @param {string} userAddress UserEntity Address
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2476,8 +2476,8 @@ if (configuration && configuration.partnerToken) {
         },
         /**
          * Get wallet information
-         * @summary Wallet
-         * @param {DtoWallet} request Wallet Request
+         * @summary WalletEntity
+         * @param {DtoWallet} request WalletEntity Request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2613,9 +2613,9 @@ export const SwapApiFp = function(configuration?: Configuration) {
             };
         },
         /**
-         * Get User Orders
-         * @summary Get User Orders
-         * @param {string} userAddress User Address
+         * Get UserEntity Orders
+         * @summary Get UserEntity Orders
+         * @param {string} userAddress UserEntity Address
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2718,8 +2718,8 @@ export const SwapApiFp = function(configuration?: Configuration) {
         },
         /**
          * Get wallet information
-         * @summary Wallet
-         * @param {DtoWallet} request Wallet Request
+         * @summary WalletEntity
+         * @param {DtoWallet} request WalletEntity Request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2808,9 +2808,9 @@ export const SwapApiFactory = function (configuration?: Configuration, fetch?: F
             return SwapApiFp(configuration).swapLimitPost(request, options)(fetch, basePath);
         },
         /**
-         * Get User Orders
-         * @summary Get User Orders
-         * @param {string} userAddress User Address
+         * Get UserEntity Orders
+         * @summary Get UserEntity Orders
+         * @param {string} userAddress UserEntity Address
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2849,8 +2849,8 @@ export const SwapApiFactory = function (configuration?: Configuration, fetch?: F
         },
         /**
          * Get wallet information
-         * @summary Wallet
-         * @param {DtoWallet} request Wallet Request
+         * @summary WalletEntity
+         * @param {DtoWallet} request WalletEntity Request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2927,9 +2927,9 @@ export class SwapApi extends BaseAPI {
     }
 
     /**
-     * Get User Orders
-     * @summary Get User Orders
-     * @param {string} userAddress User Address
+     * Get UserEntity Orders
+     * @summary Get UserEntity Orders
+     * @param {string} userAddress UserEntity Address
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SwapApi
@@ -2976,8 +2976,8 @@ export class SwapApi extends BaseAPI {
 
     /**
      * Get wallet information
-     * @summary Wallet
-     * @param {DtoWallet} request Wallet Request
+     * @summary WalletEntity
+     * @param {DtoWallet} request WalletEntity Request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SwapApi

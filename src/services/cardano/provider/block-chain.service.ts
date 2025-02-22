@@ -7,6 +7,7 @@ import {
 import { BlockFrostConfig, UTXO } from './blockfrost/BlockFrostConfig';
 import { composeTransaction, signTransaction } from './blockfrost/helpers';
 import { CardanoUtils } from '../utils';
+import { AssetInfo } from '../../types';
 
 @Injectable()
 export class BlockChainService {
@@ -41,7 +42,8 @@ export class BlockChainService {
     if (!assetInfo) {
       throw new Error('Asset not found');
     }
-    if (assetInfo.onchain_metadata_standard !== 'CIP25v2' && assetInfo.onchain_metadata_standard !== 'CIP25v1') {
+    console.log(assetInfo);
+    if (assetInfo.onchain_metadata_standard === 'CIP25v2' || assetInfo.onchain_metadata_standard === 'CIP25v1') {
 
       return {
         assetId: assetInfo.asset,

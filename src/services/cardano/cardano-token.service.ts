@@ -4,8 +4,8 @@ import { Injectable } from '@nestjs/common';
 import { WalletService } from '../wallet.service';
 import { InternalDexhunterError, NotEnoughFunds, NotEnoughFundsDexHunterError } from '../exceptions/custom';
 import { CARDANO } from '../../utils/constants';
-import { ReplicaWallet } from '../../model/entities/wallet/replicaWallet';
-import { Distribution, KeypairInfo, SWAP, SwapOptionsInput } from '../types';
+import { ReplicaWalletEntity } from '../../model/entities/wallet/replica-wallet.entity';
+import { AssetInfo, Distribution, KeypairInfo, SWAP, SwapOptionsInput } from '../types';
 
 
 
@@ -24,12 +24,12 @@ export class CardanoTokenService {
   }
 
   async getTokenBalances(address) : Promise<AssetInfo[]> {
-    const assetBalances =
-      await this.chainService.getCardanoTokenBalances(address);
-    console.log(assetBalances);
-    return assetBalances
+    const assetBalances = await this.chainService.getCardanoTokenBalances(address);
+    console.log(assetBalances)
+    const assets : AssetInfo[]= await Promise.all(assetBalances
       .map(async (asset) => {
         const tokenInfo = await this.getCardanoTokenMetadata(asset.unit);
+        console.log(tokenInfo)
         if (tokenInfo === null) {
           return null;
         }
@@ -39,8 +39,8 @@ export class CardanoTokenService {
           ticker: tokenInfo.ticker,
           quantity: asset.quantity,
         };
-      })
-      .filter((asset) => asset !== null);
+      }))
+    return assets.filter((asset) => asset !== null);
   }
 
   async getTokenBalance(address, policyId) {
@@ -104,7 +104,7 @@ export class CardanoTokenService {
 
   }
 
-  private async multipleWalletSwapToken(action:SWAP, policyId, userAddress,replicas : ReplicaWallet[], amount : number | number[], options?: SwapOptionsInput) {
+  private async multipleWalletSwapToken(action:SWAP, policyId, userAddress, replicas : ReplicaWalletEntity[], amount : number | number[], options?: SwapOptionsInput) {
     if (options.slippage < 0 || options.slippage > 1) {
       throw new Error('Slippage must be between 0 and 1');
     }

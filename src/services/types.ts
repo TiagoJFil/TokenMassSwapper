@@ -16,6 +16,12 @@ export type PublicWalletInfo = {
     stakeKey: string
 }
 
+export type AssetInfo = {
+  assetId: string,
+  policyId: string,
+  assetName: string,
+  ticker: string
+}
 
 export enum SWAP {
   BUY = 'buy',

@@ -5,20 +5,20 @@ import {
     ManyToOne,
     type Relation, ChildEntity, ManyToMany, JoinTable,
 } from 'typeorm';
-import { Wallet } from "./wallet";
-import { User } from '../user';
-import { WalletManager } from '../walletManager';
+import { WalletEntity } from "./wallet.entity";
+import { UserEntity } from '../user.entity';
+import { WalletManagerEntity } from '../wallet-manager.entity';
 
 
 @Entity()
-export class ReplicaWallet extends Wallet {
+export class ReplicaWalletEntity extends WalletEntity {
 
     @Column()
     index : number;
 
     @JoinColumn()
-    @ManyToOne(() => WalletManager, manager => manager.wallets, { lazy: true })
-    managed_by: Relation<WalletManager>;
+    @ManyToOne(() => WalletManagerEntity, manager => manager.wallets, { lazy: true })
+    managed_by: Relation<WalletManagerEntity>;
 
     @Column()
     privateKey: string;

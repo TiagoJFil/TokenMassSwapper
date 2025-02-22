@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WalletService } from "./services/wallet.service";
-import { User } from "./model/entities/user";
-import { UserWallet } from "./model/entities/wallet/userWallet";
+import { UserEntity } from "./model/entities/user.entity";
+import { UserWalletEntity } from "./model/entities/wallet/user-wallet.entity";
 import { WalletController } from './controllers/cardano/wallet.controller';
 import { CardanoTokenService } from './services/cardano/cardano-token.service';
 import { BlockChainService } from './services/cardano/provider/block-chain.service';
@@ -16,10 +16,10 @@ import { CardanoWalletProviderService } from './services/cardano/provider/cardan
 import { ENV } from './utils/constants';
 import { UserService } from './services/user.service';
 import { addTransactionalDataSource } from 'typeorm-transactional';
-import { ReplicaWallet } from './model/entities/wallet/replicaWallet';
+import { ReplicaWalletEntity } from './model/entities/wallet/replica-wallet.entity';
 import { DataSource } from 'typeorm';
-import { Wallet } from './model/entities/wallet/wallet';
-import { WalletManager } from './model/entities/walletManager';
+import { WalletEntity } from './model/entities/wallet/wallet.entity';
+import { WalletManagerEntity } from './model/entities/wallet-manager.entity';
 import { TransactionController } from './controllers/cardano/transaction.controller';
 import { NodeTxSubmitterService } from './services/cardano/provider/node/node-tx-submitter.service';
 import { BlockFrostTxSubmitterService } from './services/cardano/provider/node/blockfrost-tx-submitter.service';
@@ -28,7 +28,7 @@ require('dotenv').config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User,UserWallet,WalletManager,ReplicaWallet,Wallet]),
+    TypeOrmModule.forFeature([UserEntity,UserWalletEntity,WalletManagerEntity,ReplicaWalletEntity,WalletEntity]),
   ],
   providers: [WalletService, CardanoWalletProviderService,NetworkProvider],
   exports: [WalletService],
@@ -66,7 +66,7 @@ export class DexHunterModule {}
 export class CardanoModule {}
 
 @Module({
-  imports: [ TypeOrmModule.forFeature([User]),],
+  imports: [ TypeOrmModule.forFeature([UserEntity]),],
   providers: [UserService],
   exports: [UserService],
 })

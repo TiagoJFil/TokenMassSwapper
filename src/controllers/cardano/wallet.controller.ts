@@ -28,11 +28,25 @@ export class WalletController {
     @Param('user_id',ParseIntPipe) user_id: number
   ): Promise<OutputDTOs> {
     const walletInfo = await this.walletService.getUserPublicWalletInfo(user_id);
-    const AdaBalance = await this.cardanoTokenService.getAdaBalance(walletInfo.address);
+    const adaBalance = await this.cardanoTokenService.getAdaBalance(walletInfo.address);
     const tokenBalances = await this.cardanoTokenService.getTokenBalances(walletInfo.stakeKey);
     // @ts-ignore
-    return new OutputDTOs(walletInfo.address,AdaBalance, tokenBalances);
+    return new OutputDTOs(walletInfo.address,adaBalance, tokenBalances);
   }
+
+  @Get("user/:user_id/replicas/")
+  async getActiveReplicaWalletsInfo(
+    @Param('user_id',ParseIntPipe) user_id: number
+  ): Promise<OutputDTOs[]> {
+    const replicas = await this.walletService.getActiveReplicaWallets(user_id);
+    return Promise.all(replicas.map( async(replica) => {
+      const adaBalance = await this.cardanoTokenService.getAdaBalance(replica.address);
+
+      const tokenBalances = await this.cardanoTokenService.getTokenBalances(replica.stakeAddress);
+      return new OutputDTOs(replica.address, adaBalance, tokenBalances);
+    }));
+  }
+
 
   @Put("user/:user_id/replicas/count/:count")
   async setReplicaWallets(
