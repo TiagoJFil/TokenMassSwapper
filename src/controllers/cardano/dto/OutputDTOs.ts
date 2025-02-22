@@ -1,3 +1,4 @@
+import { PublicKeyInfo } from '../../../services/types';
 
 export class OutputDTOs {
   constructor(public address: string, public ADA: string, public tokens : string) {

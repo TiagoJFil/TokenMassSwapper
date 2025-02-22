@@ -5,6 +5,7 @@ import { CardanoUtils } from '../utils';
 import { NESTJS } from '../../../utils/constants';
 import { bech32 } from 'bech32';
 import { Address, BaseAddress, RewardAddress } from '@emurgo/cardano-serialization-lib-nodejs';
+import { KeypairInfo, MyMnemonic } from '../../types';
 
 @Injectable()
 export class CardanoWalletProvider {

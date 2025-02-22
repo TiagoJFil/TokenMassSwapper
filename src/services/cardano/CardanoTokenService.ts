@@ -5,6 +5,7 @@ import { WalletService } from '../wallet.service';
 import { InternalDexhunterError, NotEnoughFunds, NotEnoughFundsDexHunterError } from '../exceptions/exceptions';
 import { CARDANO } from '../../utils/constants';
 import { ReplicaWallet } from '../../model/entities/wallet/replicaWallet';
+import { Distribution, KeypairInfo, SWAP, SwapOptionsInput } from '../types';
 
 
 

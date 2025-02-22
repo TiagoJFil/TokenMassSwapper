@@ -1,29 +1,29 @@
 
-type Address = string;
+export type Address = string;
 
-type KeypairInfo = {
+export type KeypairInfo = {
   publicKey : string,
   stakeKey :string,
   privateKey: string,
   stakePrivateKey: string
 }
-type MyMnemonic = string;
-type PublicKeyInfo = { publicKey : string }
-type PubPrivatePair = { publicKey : string, privateKey : string }
+export type MyMnemonic = string;
+export type PublicKeyInfo = { publicKey : string }
+export type PubPrivatePair = { publicKey : string, privateKey : string }
 
 
 
-enum SWAP {
+export enum SWAP {
   BUY = 'buy',
   SELL = 'sell',
 }
 
-enum Distribution {
+export enum Distribution {
   UNIFORM = 'uniform',
   WEIGHTED = 'weighted',
 }
 
-type SwapOptionsInput = {
+export type SwapOptionsInput = {
   slippage: number;
   selfSend?: boolean;
   distribution?: Distribution;

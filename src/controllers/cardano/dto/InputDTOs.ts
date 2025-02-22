@@ -1,27 +1,55 @@
+import { IsBoolean, isEnum, IsEnum, IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { Distribution } from '../../../services/types';
 
-
-//enum for distribution
-enum Distribution {
-  UNIFORM = 'uniform',
-  WEIGHTED = 'weighted',
-}
 
 export class BuyInfoOptionsInput {
-  constructor(
-    public amount: number,
-    public slippage: number,
-    public distribution: Distribution = Distribution.WEIGHTED,
-    public selfSend: boolean = false,
-  ) {
+
+  @IsInt()
+  @Min(1)
+  public amount: number;
+
+  @IsNumber( { maxDecimalPlaces: 2 })
+  @Max(1)
+  @Min(0)
+  public slippage: number;
+
+  @IsEnum(Distribution)
+  public distribution: Distribution = Distribution.WEIGHTED;
+
+  @IsBoolean()
+  @IsOptional()
+  public selfSend?: boolean = false;
+
+  constructor(amount: number, slippage: number, distribution: Distribution, selfSend: boolean) {
+    this.amount = amount;
+    this.slippage = slippage;
+    this.distribution = distribution;
+    this.selfSend = selfSend;
   }
 }
 
 export class SellInfoOptionsInput {
-  constructor(
-    public percentage: number,
-    public slippage: number,
-    public distribution: Distribution = Distribution.WEIGHTED,
-    public selfSend: boolean = false,
-  ) {
+
+  @IsNumber( { maxDecimalPlaces: 2 })
+  @Max(1)
+  @Min(0)
+  public percentage: number;
+
+  @IsNumber( { maxDecimalPlaces: 2 })
+  @Max(1)
+  @Min(0)
+  public slippage: number;
+
+  @IsEnum(Distribution)
+  public distribution: Distribution = Distribution.WEIGHTED;
+
+  @IsBoolean()
+  public selfSend: boolean = false;
+
+  constructor(percentage: number, slippage: number, distribution: Distribution, selfSend: boolean) {
+    this.percentage = percentage;
+    this.slippage = slippage;
+    this.distribution = distribution;
+    this.selfSend = selfSend;
   }
 }

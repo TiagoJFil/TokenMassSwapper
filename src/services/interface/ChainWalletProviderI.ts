@@ -1,3 +1,4 @@
+import { KeypairInfo, MyMnemonic } from '../types';
 
 
 export interface ChainWalletProviderI {

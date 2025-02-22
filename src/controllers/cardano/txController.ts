@@ -25,7 +25,7 @@ export class TransactionController {
     @Param('policy_id') policyId: string,
     @Body() buyInfoInput: BuyInfoOptionsInput,
   ): Promise<BuyTransactionOutput> {
-
+    buyInfoInput.selfSend = buyInfoInput.selfSend || false;
     const res = await this.cardanoTokenService.multipleWalletBuyToken(
     userId,policyId, buyInfoInput.amount,{slippage: buyInfoInput.slippage,selfSend: buyInfoInput.selfSend, distribution: buyInfoInput.distribution});
     console.log("res",res);
@@ -42,11 +42,10 @@ export class TransactionController {
 
     const res = await this.cardanoTokenService.multipleWalletSellToken(
     userId,policyId, sellInfoInput.percentage,{slippage: sellInfoInput.slippage,selfSend: sellInfoInput.selfSend, distribution: sellInfoInput.distribution});
-    // Implement the logic to buy token here
+
     console.log("res",res);
     return new BuyTransactionOutput(null, null, null, null);
   }
-
 
 
 

@@ -10,6 +10,7 @@ import { CardanoWalletProvider } from './cardano/provider/CardanoWalletProvider'
 import { PublicWalletInfo } from './dto';
 import { WalletManager } from '../model/entities/walletManager';
 import { runOnTransactionCommit, runOnTransactionRollback, Transactional } from 'typeorm-transactional';
+import { MyMnemonic, PublicKeyInfo } from './types';
 
 @Injectable()
 export class WalletService {
