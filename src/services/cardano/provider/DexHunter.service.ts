@@ -1,6 +1,5 @@
 import {
   DtoSwapObject,
-  DtoSwapResponse,
   SwapApiFactory,
   SwapApiFactoryType,
 } from './dexhunter/api';
@@ -8,54 +7,45 @@ import { Configuration } from './dexhunter/DexHunterSDK';
 import FetchFetchApi from './dexhunter/fetchFetchApi';
 import { Inject, Injectable } from '@nestjs/common';
 import { CARDANO, NESTJS } from 'src/utils/constants';
-import * as CardanoWasm from '@emurgo/cardano-serialization-lib-nodejs';
 import {
-  NotEnoughFunds,
   NotEnoughFundsDexHunterError,
   NoUtxFoundError,
 } from '../../exceptions/exceptions';
 import {
-  composeTransaction,
   getSignaturesForCBOR,
-  signTransactionFromCBOR,
-  signTransaction,
 } from './blockfrost/helpers';
-import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
-import { BlockFrostConfig } from './blockfrost/BlockFrostConfig';
-import { txsCbor } from '@blockfrost/blockfrost-js/lib/endpoints/api/txs';
+import { SWAP } from '../../types';
 
 @Injectable()
 export class DexHunterService {
-  private chainApi: BlockFrostAPI;
   private swapApi: SwapApiFactoryType;
 
   constructor(
-    @Inject(NESTJS.BLOCKFROST_CONFIG_PROVIDER_KEY)
-    blockFrostConfig: BlockFrostConfig,
     @Inject(NESTJS.DEXHUNTER_CONFIG_PROVIDER_KEY)
     configuration: Configuration,
+    @Inject(NESTJS.TX_SUBMITTER_PROVIDER_KEY)
+    private txSubmitter : TxSubmitter
   ) {
     this.swapApi = SwapApiFactory(
       configuration,
       FetchFetchApi,
       configuration.basePath,
     );
-    this.chainApi = new BlockFrostAPI({
-      projectId: blockFrostConfig.apiKey,
-      network: blockFrostConfig.network,
-    });
   }
-
 
 
   private async executeSwap(swapPayload, signerPrivateKey, signerStakeKey) {
     const swap = await this.sendSwapRequest(swapPayload);
+    console.log('swap', swap);
     const signatures = this.signSwapTransaction(swap,signerPrivateKey,signerStakeKey);
     const dexSignedTx = await this.requestSignedSwapTransaction(
       signatures,
       swap,
     );
-    const txHashResult = await this.chainApi.txSubmit(dexSignedTx.cbor);
+    console.log('dexSignedTx', dexSignedTx);
+    console.log(dexSignedTx.cbor)
+    const txHashResult = await this.txSubmitter.submitTx(dexSignedTx.cbor);
+    console.log('txHashResult', txHashResult);
     //^^ need this to execute the transaction
     return swap;
   }

@@ -3,6 +3,9 @@ import { BlockFrostConfig } from 'src/services/cardano/provider/blockfrost/Block
 import { Configuration } from 'src/services/cardano/provider/dexhunter/DexHunterSDK';
 import { ENV, NESTJS } from 'src/utils/constants';
 import { NotFoundEnvVarError } from '../services/exceptions/exceptions';
+import { BlockFrostTxSubmitterService } from '../services/cardano/provider/node/BlockFrostTxSubmiter.service';
+import { NodeTxSubmitterService } from '../services/cardano/provider/node/NodeTxSubmiter.service';
+
 
 export const DexhunterConfigProvider: Provider = {
   provide: NESTJS.DEXHUNTER_CONFIG_PROVIDER_KEY,
@@ -15,6 +18,29 @@ export const DexhunterConfigProvider: Provider = {
     });
   },
 };
+
+export const CustomNodeEndpointProvider: Provider = {
+  provide: NESTJS.CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT,
+  useFactory: () =>
+  process.env[ENV.CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT],
+}
+
+export const TxSubmitterProvider: Provider = {
+  provide: NESTJS.TX_SUBMITTER_PROVIDER_KEY,
+  inject: [NESTJS.CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT, NESTJS.BLOCKFROST_CONFIG_PROVIDER_KEY],
+  useFactory: (
+    customNodeEndpoint: string,
+    blockFrostAPI: BlockFrostConfig
+  ) =>  {
+
+    if(!process.env[ENV.CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT]){
+      return new BlockFrostTxSubmitterService(blockFrostAPI);
+    }
+    else {
+      return new NodeTxSubmitterService(customNodeEndpoint);
+    }
+  }
+}
 
 export const BlockfrostConfigProvider: Provider = {
   provide: NESTJS.BLOCKFROST_CONFIG_PROVIDER_KEY,

@@ -1,4 +1,4 @@
-import { DexHunterService } from './provider/DexHunterService';
+import { DexHunterService } from './provider/DexHunter.service';
 import { BlockChainService } from './provider/block-chain.service';
 import { Injectable } from '@nestjs/common';
 import { WalletService } from '../wallet.service';
@@ -63,6 +63,15 @@ export class CardanoTokenService {
   async multipleWalletBuyToken(userId, policyId, amount : number, options?: SwapOptionsInput) {
     const replicaWallets = await this.walletService.getActiveReplicaWallets(userId);
     const userWallet = await this.walletService.getUserWallet(userId);
+
+    if (options.distribution === Distribution.UNIFORM) {
+      return await this.multipleWalletSwapToken(SWAP.BUY, policyId, userWallet.address, replicaWallets, amount, options);
+    } else {
+
+      //TODO see logic about weighted distribution
+      //TODO think about wallet balances
+    }
+    //selectItemBasedOnProbability
     return await this.multipleWalletSwapToken(SWAP.BUY, policyId, userWallet.address, replicaWallets, amount, options);
   }
 
@@ -90,10 +99,8 @@ export class CardanoTokenService {
       return await this.multipleWalletSwapToken(SWAP.SELL,policyId,userWallet.address,replicasWithBalance, amount, options);
     }else{
 
+
     }
-
-
-
 
   }
 
@@ -101,7 +108,8 @@ export class CardanoTokenService {
     if (options.slippage < 0 || options.slippage > 1) {
       throw new Error('Slippage must be between 0 and 1');
     }
-    options.selfSend = options.selfSend || false;
+
+    console.log(typeof amount)
     if (typeof amount !== 'number') {
       if (amount.length !== replicas.length) {
         throw new Error('Amounts and replicas must have the same length');

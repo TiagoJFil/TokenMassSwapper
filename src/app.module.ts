@@ -6,8 +6,12 @@ import { UserWallet } from "./model/entities/wallet/userWallet";
 import { AdaAppController } from './controllers/cardano/adaAppController';
 import { CardanoTokenService } from './services/cardano/CardanoTokenService';
 import { BlockChainService } from './services/cardano/provider/block-chain.service';
-import { DexHunterService } from './services/cardano/provider/DexHunterService';
-import { BlockfrostConfigProvider, DexhunterConfigProvider, NetworkProvider } from './nextjs/providers';
+import { DexHunterService } from './services/cardano/provider/DexHunter.service';
+import {
+  BlockfrostConfigProvider, CustomNodeEndpointProvider,
+  DexhunterConfigProvider,
+  NetworkProvider, TxSubmitterProvider,
+} from './nextjs/providers';
 import { CardanoWalletProvider } from './services/cardano/provider/CardanoWalletProvider';
 import { ENV } from './utils/constants';
 import { UserService } from './services/user.service';
@@ -17,6 +21,8 @@ import { DataSource } from 'typeorm';
 import { Wallet } from './model/entities/wallet/wallet';
 import { WalletManager } from './model/entities/walletManager';
 import { TransactionController } from './controllers/cardano/txController';
+import { NodeTxSubmitterService } from './services/cardano/provider/node/NodeTxSubmiter.service';
+import { BlockFrostTxSubmitterService } from './services/cardano/provider/node/BlockFrostTxSubmiter.service';
 
 require('dotenv').config();
 
@@ -30,30 +36,24 @@ require('dotenv').config();
 export class WalletModule {}
 
 
-// @Module({
-//   imports: [IndexerModule],
-//   providers: [KasplexService, IndexerModule],
-//   exports: [KasplexService]
-// })
-// export class KasplexModule {}
-//
-// @Module({
-//   controllers: [KaspaAppController],
-//   imports: [KasplexModule,WalletModule],
-//   providers: [],
-// })
-// export class KaspaEndpointModule {}
 
 @Module({
   imports: [],
   providers: [BlockfrostConfigProvider, BlockChainService],
-  exports: [BlockChainService],
+  exports: [BlockChainService,BlockfrostConfigProvider],
 })
 export class BlockFrostModule {}
 
 @Module({
-  imports: [],
-  providers: [DexhunterConfigProvider,BlockfrostConfigProvider, DexHunterService],
+  imports: [BlockFrostModule],
+  providers: [TxSubmitterProvider,CustomNodeEndpointProvider,NodeTxSubmitterService,BlockFrostTxSubmitterService],
+  exports: [TxSubmitterProvider],
+})
+export class TxSubmitterModule {}
+
+@Module({
+  imports: [TxSubmitterModule],
+  providers: [DexhunterConfigProvider, DexHunterService],
   exports: [DexHunterService],
 })
 export class DexHunterModule {}
