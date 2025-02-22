@@ -2,9 +2,9 @@ import { Provider } from '@nestjs/common';
 import { BlockFrostConfig } from 'src/services/cardano/provider/blockfrost/BlockFrostConfig';
 import { Configuration } from 'src/services/cardano/provider/dexhunter/DexHunterSDK';
 import { ENV, NESTJS } from 'src/utils/constants';
-import { NotFoundEnvVarError } from '../services/exceptions/exceptions';
-import { BlockFrostTxSubmitterService } from '../services/cardano/provider/node/BlockFrostTxSubmiter.service';
-import { NodeTxSubmitterService } from '../services/cardano/provider/node/NodeTxSubmiter.service';
+import { NotFoundEnvVarError } from '../services/exceptions/custom';
+import { BlockFrostTxSubmitterService } from '../services/cardano/provider/node/blockfrost-tx-submitter.service';
+import { NodeTxSubmitterService } from '../services/cardano/provider/node/node-tx-submitter.service';
 
 
 export const DexhunterConfigProvider: Provider = {

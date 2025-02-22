@@ -4,13 +4,11 @@ import { ReplicaWallet } from '../model/entities/wallet/replicaWallet';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserNotFoundException, WalletManagerNotFoundException, WalletNotFoundException } from './exceptions';
-import { CardanoWalletProvider } from './cardano/provider/CardanoWalletProvider';
-
-import { PublicWalletInfo } from './dto';
+import { UserNotFoundException, WalletManagerNotFoundException, WalletNotFoundException } from './exceptions/generic';
+import { CardanoWalletProviderService } from './cardano/provider/cardano-wallet-provider.service';
 import { WalletManager } from '../model/entities/walletManager';
 import { runOnTransactionCommit, runOnTransactionRollback, Transactional } from 'typeorm-transactional';
-import { MyMnemonic, PublicKeyInfo } from './types';
+import { MyMnemonic, PublicKeyInfo, PublicWalletInfo } from './types';
 
 @Injectable()
 export class WalletService {
@@ -21,7 +19,7 @@ export class WalletService {
     private userRepository: Repository<User>,
     @InjectRepository(WalletManager)
     private walletManagerRepository: Repository<WalletManager>,
-    private readonly walletProvider: CardanoWalletProvider,
+    private readonly walletProvider: CardanoWalletProviderService,
   ) {}
 
   async createUserWallet(userId: number): Promise<UserWallet> {
@@ -153,7 +151,7 @@ export class WalletService {
     });
     //assert that user has a wallet
     if (!userWallet) throw new WalletNotFoundException('User has no wallet');
-    return new PublicWalletInfo(userWallet.address, userWallet.stakeAddress);
+    return { address: userWallet.address, stakeKey: userWallet.stakeAddress};
   }
 
   private generateReplicaWallet(mnemonic: MyMnemonic, index: number) {

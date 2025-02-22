@@ -8,7 +8,7 @@ import { Address, BaseAddress, RewardAddress } from '@emurgo/cardano-serializati
 import { KeypairInfo, MyMnemonic } from '../../types';
 
 @Injectable()
-export class CardanoWalletProvider {
+export class CardanoWalletProviderService {
 
   private network_id : number ;
 

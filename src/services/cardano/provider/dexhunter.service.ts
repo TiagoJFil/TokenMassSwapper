@@ -10,14 +10,14 @@ import { CARDANO, NESTJS } from 'src/utils/constants';
 import {
   NotEnoughFundsDexHunterError,
   NoUtxFoundError,
-} from '../../exceptions/exceptions';
+} from '../../exceptions/custom';
 import {
   getSignaturesForCBOR,
 } from './blockfrost/helpers';
 import { SWAP } from '../../types';
 
 @Injectable()
-export class DexHunterService {
+export class DexhunterService {
   private swapApi: SwapApiFactoryType;
 
   constructor(

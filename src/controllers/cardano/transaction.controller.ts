@@ -5,7 +5,7 @@
 import { Body, Controller, Get, Injectable, Param, Post, Put } from '@nestjs/common';
 import { WalletService } from '../../services/wallet.service';
 import { BuyTransactionOutput, CreatedReplicasInfo, OutputDTOs, UserWalletCreateOutput } from './dto/OutputDTOs';
-import { CardanoTokenService } from '../../services/cardano/CardanoTokenService';
+import { CardanoTokenService } from '../../services/cardano/cardano-token.service';
 
 import { Transactional } from 'typeorm-transactional';
 import { ParseIntPipe } from '@nestjs/common';

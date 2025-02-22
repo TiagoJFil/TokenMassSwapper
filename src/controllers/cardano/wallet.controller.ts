@@ -1,14 +1,14 @@
 import { Controller, Get, Injectable, Param, Post, Put } from '@nestjs/common';
 import { WalletService } from '../../services/wallet.service';
 import { CreatedReplicasInfo, OutputDTOs, UserWalletCreateOutput } from './dto/OutputDTOs';
-import { CardanoTokenService } from '../../services/cardano/CardanoTokenService';
+import { CardanoTokenService } from '../../services/cardano/cardano-token.service';
 import { UserService } from '../../services/user.service';
 import { Transactional } from 'typeorm-transactional';
 import { ParseIntPipe } from '@nestjs/common';
 
 
 @Controller("ada")
-export class AdaAppController {
+export class WalletController {
   constructor(private readonly walletService: WalletService,
               private readonly userService: UserService,
               private readonly cardanoTokenService: CardanoTokenService) {}

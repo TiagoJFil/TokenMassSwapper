@@ -11,6 +11,10 @@ export type MyMnemonic = string;
 export type PublicKeyInfo = { publicKey : string }
 export type PubPrivatePair = { publicKey : string, privateKey : string }
 
+export type PublicWalletInfo = {
+    address: string,
+    stakeKey: string
+}
 
 
 export enum SWAP {

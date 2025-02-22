@@ -3,16 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WalletService } from "./services/wallet.service";
 import { User } from "./model/entities/user";
 import { UserWallet } from "./model/entities/wallet/userWallet";
-import { AdaAppController } from './controllers/cardano/adaAppController';
-import { CardanoTokenService } from './services/cardano/CardanoTokenService';
+import { WalletController } from './controllers/cardano/wallet.controller';
+import { CardanoTokenService } from './services/cardano/cardano-token.service';
 import { BlockChainService } from './services/cardano/provider/block-chain.service';
-import { DexHunterService } from './services/cardano/provider/DexHunter.service';
+import { DexhunterService } from './services/cardano/provider/dexhunter.service';
 import {
   BlockfrostConfigProvider, CustomNodeEndpointProvider,
   DexhunterConfigProvider,
   NetworkProvider, TxSubmitterProvider,
 } from './nextjs/providers';
-import { CardanoWalletProvider } from './services/cardano/provider/CardanoWalletProvider';
+import { CardanoWalletProviderService } from './services/cardano/provider/cardano-wallet-provider.service';
 import { ENV } from './utils/constants';
 import { UserService } from './services/user.service';
 import { addTransactionalDataSource } from 'typeorm-transactional';
@@ -20,9 +20,9 @@ import { ReplicaWallet } from './model/entities/wallet/replicaWallet';
 import { DataSource } from 'typeorm';
 import { Wallet } from './model/entities/wallet/wallet';
 import { WalletManager } from './model/entities/walletManager';
-import { TransactionController } from './controllers/cardano/txController';
-import { NodeTxSubmitterService } from './services/cardano/provider/node/NodeTxSubmiter.service';
-import { BlockFrostTxSubmitterService } from './services/cardano/provider/node/BlockFrostTxSubmiter.service';
+import { TransactionController } from './controllers/cardano/transaction.controller';
+import { NodeTxSubmitterService } from './services/cardano/provider/node/node-tx-submitter.service';
+import { BlockFrostTxSubmitterService } from './services/cardano/provider/node/blockfrost-tx-submitter.service';
 
 require('dotenv').config();
 
@@ -30,7 +30,7 @@ require('dotenv').config();
   imports: [
     TypeOrmModule.forFeature([User,UserWallet,WalletManager,ReplicaWallet,Wallet]),
   ],
-  providers: [WalletService, CardanoWalletProvider,NetworkProvider],
+  providers: [WalletService, CardanoWalletProviderService,NetworkProvider],
   exports: [WalletService],
 })
 export class WalletModule {}
@@ -53,8 +53,8 @@ export class TxSubmitterModule {}
 
 @Module({
   imports: [TxSubmitterModule],
-  providers: [DexhunterConfigProvider, DexHunterService],
-  exports: [DexHunterService],
+  providers: [DexhunterConfigProvider, DexhunterService],
+  exports: [DexhunterService],
 })
 export class DexHunterModule {}
 
@@ -73,7 +73,7 @@ export class CardanoModule {}
 export class UserModule {}
 
 @Module({
-  controllers: [AdaAppController,TransactionController],
+  controllers: [WalletController,TransactionController],
   imports: [WalletModule, CardanoModule,UserModule],
 })
 export class CardanoEndpointModule {}

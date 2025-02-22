@@ -1,8 +1,8 @@
-import { DexHunterService } from './provider/DexHunter.service';
+import { DexhunterService } from './provider/dexhunter.service';
 import { BlockChainService } from './provider/block-chain.service';
 import { Injectable } from '@nestjs/common';
 import { WalletService } from '../wallet.service';
-import { InternalDexhunterError, NotEnoughFunds, NotEnoughFundsDexHunterError } from '../exceptions/exceptions';
+import { InternalDexhunterError, NotEnoughFunds, NotEnoughFundsDexHunterError } from '../exceptions/custom';
 import { CARDANO } from '../../utils/constants';
 import { ReplicaWallet } from '../../model/entities/wallet/replicaWallet';
 import { Distribution, KeypairInfo, SWAP, SwapOptionsInput } from '../types';
@@ -12,7 +12,7 @@ import { Distribution, KeypairInfo, SWAP, SwapOptionsInput } from '../types';
 @Injectable()
 export class CardanoTokenService {
   constructor(
-    private readonly tokenService: DexHunterService,
+    private readonly tokenService: DexhunterService,
     private readonly walletService: WalletService,
     private readonly chainService: BlockChainService,
   ) {}
