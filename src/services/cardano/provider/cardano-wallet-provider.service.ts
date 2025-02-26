@@ -26,7 +26,7 @@ export class CardanoWalletProviderService {
   generateMnemonic(): MyMnemonic {
     return generateMnemonic();
   }
-  createUserKeyPair(mnemonic: MyMnemonic): KeypairInfo {
+  deriveUserKeyPair(mnemonic: MyMnemonic): KeypairInfo {
     return this.deriveKeypair(mnemonic, 0);
   }
 

@@ -29,7 +29,7 @@ export class WalletService {
     //assert that user exists
     if (!user) throw Error('UserEntity not found');
     const { publicKey, stakeKey, privateKey, stakePrivateKey } =
-      this.walletProvider.createUserKeyPair(mnemonic);
+      this.walletProvider.deriveUserKeyPair(mnemonic);
     //TODO: review what to do with the pk
     const wallet = new UserWalletEntity(publicKey.toString(), stakeKey, mnemonic);
     wallet.user = user;
@@ -62,7 +62,7 @@ export class WalletService {
       relations: ['wallets'],
     });
     //assert that user has a wallet manager
-    if (!walletManager) throw new WalletManagerNotFoundException('UserEntity has not created any replicas');
+    if (!walletManager) return [];
     if (walletManager.currentReplicaAmount < 1) return [];
     else {
       const replicaWallets = await walletManager.wallets;

@@ -2,11 +2,12 @@ import * as CardanoWasm from '@emurgo/cardano-serialization-lib-nodejs';
 import { Responses } from '@blockfrost/blockfrost-js';
 import { UTXO } from './BlockFrostConfig';
 import { bech32 } from 'bech32';
+import { CardanoUtils } from '../../utils';
 
 export const composeTransaction = (
   address: string,
   outputAddress: string,
-  outputAmount: string,
+  outputAmount: number,
   utxos: UTXO,
   params: {
     protocolParams: Responses['epoch_param_content'];
@@ -23,9 +24,7 @@ export const composeTransaction = (
   const txBuilder = CardanoWasm.TransactionBuilder.new(
     CardanoWasm.TransactionBuilderConfigBuilder.new()
       .fee_algo(
-        CardanoWasm.LinearFee.new(
-          CardanoWasm.BigNum.from_str(params.protocolParams.min_fee_a.toString()),
-          CardanoWasm.BigNum.from_str(params.protocolParams.min_fee_b.toString()),
+        CardanoWasm.LinearFee.new(CardanoWasm.BigNum.from_str(params.protocolParams.min_fee_a.toString()), CardanoWasm.BigNum.from_str(params.protocolParams.min_fee_b.toString()),
         ),
       )
       .pool_deposit(CardanoWasm.BigNum.from_str(params.protocolParams.pool_deposit))
@@ -48,7 +47,7 @@ export const composeTransaction = (
   txBuilder.add_output(
     CardanoWasm.TransactionOutput.new(
       outputAddr,
-      CardanoWasm.Value.new(CardanoWasm.BigNum.from_str(outputAmount)),
+      CardanoWasm.Value.new(CardanoWasm.BigNum.from_str(CardanoUtils.toLovelace(outputAmount).toString())),
     ),
   );
 
@@ -90,8 +89,9 @@ export const composeTransaction = (
 
 export const signTransaction = (
   txBody: CardanoWasm.TransactionBody,
-  signKey: CardanoWasm.PrivateKey,
+  signKeyString: string,
 ): CardanoWasm.Transaction => {
+  const signKey = CardanoWasm.PrivateKey.from_bech32(signKeyString);
   const txHash = CardanoWasm.hash_transaction(txBody);
   const witnesses = CardanoWasm.TransactionWitnessSet.new();
   const vkeyWitnesses = CardanoWasm.Vkeywitnesses.new();

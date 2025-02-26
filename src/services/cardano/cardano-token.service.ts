@@ -2,10 +2,16 @@ import { DexhunterService } from './provider/dexhunter.service';
 import { BlockChainService } from './provider/block-chain.service';
 import { Injectable } from '@nestjs/common';
 import { WalletService } from '../wallet.service';
-import { InternalDexhunterError, NotEnoughFunds, NotEnoughFundsDexHunterError } from '../exceptions/custom';
+import {
+  InternalDexhunterError,
+  NotEnoughFunds,
+  NotEnoughFundsDexHunterError,
+  NotEnoughFundsForDistro,
+} from '../exceptions/custom';
 import { CARDANO } from '../../utils/constants';
 import { ReplicaWalletEntity } from '../../model/entities/wallet/replica-wallet.entity';
-import { AssetInfo, Distribution, KeypairInfo, SWAP, SwapOptionsInput } from '../types';
+import { Address, AssetInfo, Distribution, KeypairInfo, SWAP, SwapOptionsInput } from '../types';
+import { CardanoWalletProviderService } from './provider/cardano-wallet-provider.service';
 
 
 
@@ -13,8 +19,9 @@ import { AssetInfo, Distribution, KeypairInfo, SWAP, SwapOptionsInput } from '..
 export class CardanoTokenService {
   constructor(
     private readonly tokenService: DexhunterService,
-    private readonly walletService: WalletService,
     private readonly chainService: BlockChainService,
+    private readonly walletService: WalletService,
+    private readonly walletProvider: CardanoWalletProviderService,
   ) {}
 
   private async getCardanoTokenMetadata(assetId: string): Promise<AssetInfo> {
@@ -156,7 +163,7 @@ export class CardanoTokenService {
     }catch (e :any){
       if (e instanceof NotEnoughFundsDexHunterError){
         const walletBalance = await this.chainService.getAdaBalance(e.address)
-        if (walletBalance < CARDANO.WALLET_MIN_BALANCE) {
+        if (walletBalance < CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE) {
           throw new NotEnoughFunds(e.address);
         }else{
           throw new InternalDexhunterError(e.message)  //retry?
@@ -167,6 +174,66 @@ export class CardanoTokenService {
 
   }
 
+
+  async distributeAdaToReplicas(userId,amountAllocatedFromMain ,distribution: Distribution) {
+    const replicas = await this.walletService.getActiveReplicaWallets(userId);
+    const userWallet = await this.walletService.getUserWallet(userId);
+    const mainWalletKeyPair = this.walletProvider.deriveUserKeyPair(userWallet.mnemonic);
+    const mainWalletAddress = userWallet.address;
+    const userWalletBalance = await this.chainService.getAdaBalance(mainWalletAddress);
+    if (userWalletBalance < amountAllocatedFromMain) {
+      throw new NotEnoughFunds(mainWalletAddress);
+    }
+    const totalReplicas = replicas.length;
+
+    if (amountAllocatedFromMain < totalReplicas * CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE) {
+      throw new NotEnoughFundsForDistro(mainWalletAddress,totalReplicas,amountAllocatedFromMain);
+    }
+
+    /*
+    let totalAmount = 0;
+    let walletToBalanceMap = new Map();
+    await Promise.all(replicas.map(async (replica) => {
+      const bal = Math.floor(await this.chainService.getAdaBalance(replica.address));
+      totalAmount += bal;
+
+      walletToBalanceMap.set(replica, bal);
+    }));
+    */
+
+    let extraAmount = 0;
+    //TODO: inform the user about the extra amount that was left on the wallet due to the replicas already having balances
+    switch (distribution) {
+      case Distribution.UNIFORM: {
+        const amountForEach = Math.floor(amountAllocatedFromMain / totalReplicas);
+
+        const res = await Promise.all(replicas.map(async (replica) => {
+          const bal = Math.floor(await this.chainService.getAdaBalance(replica.address));
+          const amountToTransfer = amountForEach - bal;
+          if (amountToTransfer <= 0) {
+            return;
+          }
+          if (amountToTransfer < amountForEach) {
+            extraAmount += amountForEach - amountToTransfer;
+          }
+          await this.chainService.sendCardano(mainWalletKeyPair.privateKey,mainWalletAddress, replica.address, amountToTransfer);
+        }));
+        console.log(res);
+        return res;
+      }
+      case Distribution.WEIGHTED: {
+
+
+
+      }
+    }
+
+
+
+
+
+
+  }
 }
 
 

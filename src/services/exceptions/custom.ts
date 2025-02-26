@@ -1,4 +1,4 @@
-
+import { CARDANO } from '../../utils/constants';
 
 //--------------------generic exceptions--------------------
 
@@ -85,4 +85,13 @@ export class NotEnoughFunds extends CardanoChainError {
     super(`Not enough funds in the given address: ${address}`)
   }
 }
+
+export class NotEnoughFundsForDistro extends CardanoChainError {
+  constructor(public address: string, public replicaCount: number, public mainBalance: number) {
+    super(`The allocated funds at: ${address} are not enough to distribute between ${replicaCount} replicas,
+     min ${CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE * replicaCount} ADA required,
+      allocated balance is only ${mainBalance} ADA`)
+  }
+}
+
 

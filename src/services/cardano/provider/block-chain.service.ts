@@ -12,10 +12,11 @@ import { AssetInfo } from '../../types';
 @Injectable()
 export class BlockChainService {
   private API: BlockFrostAPI;
-
   constructor(
     @Inject(NESTJS.BLOCKFROST_CONFIG_PROVIDER_KEY)
     blockFrostConfig: BlockFrostConfig,
+    @Inject(NESTJS.TX_SUBMITTER_PROVIDER_KEY)
+    private readonly txSubmitter : TxSubmitter
   ) {
     this.API = new BlockFrostAPI({
       projectId: blockFrostConfig.apiKey,
@@ -77,14 +78,8 @@ export class BlockChainService {
     // Implement the logic to get ADA balance here
   }
 
-  /**
-   * Sends Ada from sender to receiver
-   * @param senderSignKey
-   * @param senderAddress
-   * @param receiverAddress
-   * @param amount
-   */
-  async sendCardano(senderSignKey, senderAddress, receiverAddress, amount) {
+
+  async fetchTransactionData( senderAddress) {
     const protocolParams = await this.API.epochsLatestParameters();
 
     let utxo: UTXO = [];
@@ -101,15 +96,28 @@ export class BlockChainService {
     }
 
     if (utxo.length === 0) {
-      //make an custom exception that will be caught by the controller
+      //TODO: make a custom exception that will be caught by the controller
       throw new Error('No funds to send a transaction');
     }
 
     const latestBlock = await this.API.blocksLatest();
     const currentSlot = latestBlock.slot;
     if (!currentSlot) {
-      throw Error('Failed to fetch slot number'); // This should never happen
+      throw new Error('Failed to fetch slot number');
     }
+
+    return { protocolParams, utxo, currentSlot };
+  }
+
+  /**
+   * Sends Ada from sender to receiver
+   * @param senderSignKey
+   * @param senderAddress
+   * @param receiverAddress
+   * @param amount
+   */
+  async sendCardano(senderSignKey, senderAddress, receiverAddress, amount:number ) {
+    const { protocolParams, utxo, currentSlot } = await this.fetchTransactionData(senderAddress);
 
     // Prepare transaction
     const { txBody } = composeTransaction(
@@ -125,11 +133,10 @@ export class BlockChainService {
     // Sign transaction
     const transaction = signTransaction(txBody, senderSignKey);
 
-    // Push transaction to network
-    try {
-      // txSubmit endpoint returns transaction hash on successful submit
-      const txHash = await this.API.txSubmit(transaction.to_bytes());
 
+    try {
+      const txHash = await this.txSubmitter.submitTx(transaction.to_bytes());
+      console.log(`Transaction hash: ${txHash}`);
       // Before the tx is included in a block it is a waiting room known as mempool
       // Retrieve transaction from Blockfrost Mempool
       const mempoolTx = await this.API.mempoolTx(txHash);
@@ -141,12 +148,14 @@ export class BlockChainService {
       // submit could fail if the transactions is rejected by cardano node
       if (error instanceof BlockfrostServerError && error.status_code === 400) {
         console.log(`Transaction rejected`);
-        // Reason for the rejection is in error.message
         console.log(error.message);
       } else {
-        // rethrow other errors
         throw error;
       }
     }
+  }
+
+  async sendToken(senderSignKey, senderAddress, receiverAddress, amount:number, assetId) {
+
   }
 }

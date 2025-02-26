@@ -9,7 +9,7 @@ export class NESTJS {
 
 export class CARDANO {
     public static ADA_POLICY_ID = ""
-    public static WALLET_MIN_BALANCE = 10
+    public static INDIVIDUAL_WALLET_MIN_BALANCE = 10
 }
 
 

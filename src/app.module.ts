@@ -31,25 +31,25 @@ require('dotenv').config();
     TypeOrmModule.forFeature([UserEntity,UserWalletEntity,WalletManagerEntity,ReplicaWalletEntity,WalletEntity]),
   ],
   providers: [WalletService, CardanoWalletProviderService,NetworkProvider],
-  exports: [WalletService],
+  exports: [WalletService,CardanoWalletProviderService],
 })
 export class WalletModule {}
 
 
-
 @Module({
   imports: [],
-  providers: [BlockfrostConfigProvider, BlockChainService],
-  exports: [BlockChainService,BlockfrostConfigProvider],
-})
-export class BlockFrostModule {}
-
-@Module({
-  imports: [BlockFrostModule],
-  providers: [TxSubmitterProvider,CustomNodeEndpointProvider,NodeTxSubmitterService,BlockFrostTxSubmitterService],
+  providers: [TxSubmitterProvider,CustomNodeEndpointProvider,BlockfrostConfigProvider,
+    NodeTxSubmitterService,BlockFrostTxSubmitterService],
   exports: [TxSubmitterProvider],
 })
 export class TxSubmitterModule {}
+
+@Module({
+  imports: [TxSubmitterModule],
+  providers: [BlockfrostConfigProvider, BlockChainService],
+  exports: [BlockChainService],
+})
+export class BlockFrostModule {}
 
 @Module({
   imports: [TxSubmitterModule],

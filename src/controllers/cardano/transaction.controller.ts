@@ -2,7 +2,7 @@
 
 //Controller for handling transactions
 
-import { Body, Controller, Get, Injectable, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Param, Post, Query } from '@nestjs/common';
 import { WalletService } from '../../services/wallet.service';
 import { BuyTransactionOutput, CreatedReplicasInfo, OutputDTOs, UserWalletCreateOutput } from './dto/OutputDTOs';
 import { CardanoTokenService } from '../../services/cardano/cardano-token.service';
@@ -10,6 +10,7 @@ import { CardanoTokenService } from '../../services/cardano/cardano-token.servic
 import { Transactional } from 'typeorm-transactional';
 import { ParseIntPipe } from '@nestjs/common';
 import { BuyInfoOptionsInput, SellInfoOptionsInput } from './dto/InputDTOs';
+import { Distribution } from '../../services/types';
 
 
 @Controller("transaction")
@@ -21,7 +22,7 @@ export class TransactionController {
   @Post("user/:user_id/buy/:policy_id/")
   @Transactional()
   async buyTokenWithReplicas(
-    @Param('user_id') userId: number,
+    @Param('user_id',ParseIntPipe) userId: number,
     @Param('policy_id') policyId: string,
     @Body() buyInfoInput: BuyInfoOptionsInput,
   ): Promise<BuyTransactionOutput> {
@@ -35,7 +36,7 @@ export class TransactionController {
   @Post("user/:user_id/sell/:policy_id/")
   @Transactional()
   async sellTokenWithReplicas(
-    @Param('user_id') userId: number,
+    @Param('user_id',ParseIntPipe) userId: number,
     @Param('policy_id') policyId: string,
     @Body() sellInfoInput: SellInfoOptionsInput,
   ): Promise<BuyTransactionOutput> {
@@ -52,11 +53,12 @@ export class TransactionController {
   @Post("user/:user_id/replicas/prepare")
   @Transactional()
   async prepareReplicaWallets(
-    @Param('user_id') userId: number,
-    @Body() replicaCount: number,
-  ): Promise<CreatedReplicasInfo> {
-    //const replicas = await this.walletService.setupReplicaWallets(userId, replicaCount);
-    return new CreatedReplicasInfo(null);
+    @Param('user_id',ParseIntPipe) userId: number,
+    @Query('amount',ParseIntPipe) mainWalletAllocatedAmount: number,
+    @Query('distribution') distribution: Distribution,
+  ): Promise<any> {
+    const balances = await this.cardanoTokenService.distributeAdaToReplicas(userId,mainWalletAllocatedAmount, distribution);
+    return balances
   }
 
 
