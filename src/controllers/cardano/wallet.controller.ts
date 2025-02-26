@@ -48,7 +48,7 @@ export class WalletController {
   }
 
 
-  @Put("user/:user_id/replicas/count/:count")
+  @Post("user/:user_id/replicas/count/:count")
   async setReplicaWallets(
     @Param('user_id',ParseIntPipe) user_id: number,
     @Param('count',ParseIntPipe) count: number

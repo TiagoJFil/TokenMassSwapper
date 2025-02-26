@@ -7,6 +7,10 @@ export class CardanoUtils {
     return 0x80000000 + num;
   }
 
+  static toLovelace(amount: number | string): number {
+    return Number(amount) * 1000000;
+  }
+
   static toAda(amount: number | string): number {
     return Number(amount) / 1000000;
   }

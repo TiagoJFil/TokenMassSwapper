@@ -9,7 +9,11 @@ import { UserEntity } from "../user.entity";
 import { WalletEntity } from "./wallet.entity";
 import { IsNotEmpty } from "class-validator";
 
-@Entity()
+@Entity(
+    {
+        name: 'user_wallet'
+    }
+)
 export class UserWalletEntity extends WalletEntity {
 
     @OneToOne(() => UserEntity, user => user.wallet, { lazy: true })

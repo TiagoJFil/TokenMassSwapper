@@ -2,7 +2,11 @@
 import { Column, BaseEntity, PrimaryColumn, Entity } from 'typeorm';
 import { IsNotEmpty } from 'class-validator';
 
-@Entity()
+@Entity(
+    {
+        name: 'wallet'
+    }
+)
 export abstract class WalletEntity extends BaseEntity {
   
     @PrimaryColumn()

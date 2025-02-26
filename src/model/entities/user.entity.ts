@@ -14,7 +14,9 @@ export interface userAttributes {
     id: number;
 }
 
-@Entity()
+@Entity({
+    name: 'user'
+})
 export class UserEntity extends BaseEntity implements userAttributes {
     @PrimaryGeneratedColumn()
     id: number;

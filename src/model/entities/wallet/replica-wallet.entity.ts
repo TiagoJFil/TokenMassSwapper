@@ -10,7 +10,11 @@ import { UserEntity } from '../user.entity';
 import { WalletManagerEntity } from '../wallet-manager.entity';
 
 
-@Entity()
+@Entity(
+    {
+        name: 'replica_wallet'
+    }
+)
 export class ReplicaWalletEntity extends WalletEntity {
 
     @Column()
