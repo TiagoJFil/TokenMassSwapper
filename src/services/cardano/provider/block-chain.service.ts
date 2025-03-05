@@ -117,6 +117,14 @@ export class BlockChainService {
    * @param amount
    */
   async sendCardano(senderSignKey, senderAddress, receiverAddress, amount:number ) {
+    await this.sendTransaction(senderSignKey, senderAddress, receiverAddress, amount, 'lovelace');
+  }
+
+  async sendToken(senderSignKey, senderAddress, receiverAddress, amount:number, assetId) {
+    await this.sendTransaction(senderSignKey, senderAddress, receiverAddress, amount, assetId);
+  }
+
+  private async sendTransaction(senderSignKey, senderAddress, receiverAddress, amount:number, assetId) {
     const { protocolParams, utxo, currentSlot } = await this.fetchTransactionData(senderAddress);
 
     // Prepare transaction
@@ -129,10 +137,10 @@ export class BlockChainService {
         protocolParams,
         currentSlot,
       },
+      assetId
     );
     // Sign transaction
     const transaction = signTransaction(txBody, senderSignKey);
-
 
     try {
       const txHash = await this.txSubmitter.submitTx(transaction.to_bytes());
@@ -153,9 +161,5 @@ export class BlockChainService {
         throw error;
       }
     }
-  }
-
-  async sendToken(senderSignKey, senderAddress, receiverAddress, amount:number, assetId) {
-
   }
 }

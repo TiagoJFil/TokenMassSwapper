@@ -13,7 +13,7 @@ export class CARDANO {
 }
 
 
-export class TOKEN_BUY_WEIGHTS {
+export class TOKEN_BUY_WEIGHTS_TABLES {
     public static SIMPLE = {
         0.3: 25,
         0.2: 69,
@@ -21,6 +21,17 @@ export class TOKEN_BUY_WEIGHTS {
         0.11: 50,
         0.19: 40,
         0.14: 30
+    }
+}
+
+export class TOKEN_DISTRIBUTE_WEIGHTS_TABLES {
+    public static SIMPLE = {
+        0.3: 36,
+        0.2: 80,
+        0.06: 111,
+        0.11: 61,
+        0.19: 51,
+        0.14: 41
     }
 }
 
@@ -40,5 +51,5 @@ export class ENV {
     public static DB_USERNAME = "DB_USERNAME" ;
     public static DB_PASSWORD = "DB_PASSWORD" ;
     public static DB_DATABASE = "DB_DATABASE" ;
-    static CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT= "CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT";
+    public static CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT= "CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT";
 }
