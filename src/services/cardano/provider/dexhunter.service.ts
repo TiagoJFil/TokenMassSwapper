@@ -105,7 +105,7 @@ export class DexhunterService {
       token_in: tokenIn,
       token_out: tokenOut,
       tx_optimization: true,
-      referrer: 'ParaSwap',
+      // referrer: 'ParaSwap',
       blacklisted_dexes: [],
       slippage: slippage,
     };

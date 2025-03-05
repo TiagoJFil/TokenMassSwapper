@@ -43,7 +43,6 @@ export class BlockChainService {
     if (!assetInfo) {
       throw new Error('Asset not found');
     }
-    console.log(assetInfo);
     if (assetInfo.onchain_metadata_standard === 'CIP25v2' || assetInfo.onchain_metadata_standard === 'CIP25v1') {
 
       return {
@@ -77,6 +76,42 @@ export class BlockChainService {
     return CardanoUtils.toAda(lovelaceBalance);
     // Implement the logic to get ADA balance here
   }
+
+  async getWalletBalances(walletAddress) {
+    let allWalletAssetsInfo : {
+      address: string;
+      amount: { unit: string; quantity: string }[];
+      stake_address: string | null;
+      type: "byron" | "shelley";
+      script: boolean
+    };
+    try {
+      allWalletAssetsInfo = await this.API.addresses(walletAddress);
+    } catch (e: any) {
+      if (e instanceof BlockfrostServerError && e.status_code == 404) {
+        return {
+          adaBal: 0,
+          tokens: []
+        };
+      } else {
+        throw e;
+      }
+    }
+    console.log(allWalletAssetsInfo);
+    const lovelaceBalance = allWalletAssetsInfo.amount.find(
+      (asset) => asset.unit === 'lovelace',
+    ).quantity;
+    const adaBal = CardanoUtils.toAda(lovelaceBalance);
+    const tokensInfo = allWalletAssetsInfo.amount.filter(
+      (asset) => asset.unit !== 'lovelace'
+    );
+
+    return {
+      adaBal,
+      tokens: tokensInfo
+    }
+  }
+
 
 
   async fetchTransactionData( senderAddress) {

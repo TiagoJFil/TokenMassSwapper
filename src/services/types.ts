@@ -17,10 +17,17 @@ export type PublicWalletInfo = {
 }
 
 export type AssetInfo = {
-  assetId: string,
   policyId: string,
+  assetId: string,
   assetName: string,
   ticker: string
+}
+
+export type AssetInfoDTO= {
+  policyId: string;
+  assetName: string;
+  ticker: string;
+  quantity: number
 }
 
 export enum SWAP {
