@@ -5,7 +5,7 @@ import { bech32 } from 'bech32';
 import { CardanoUtils } from '../../utils';
 
 const initializeTxBuilder = (params) => {
-  return CardanoWasm.TransactionBuilder.new(
+  const builder = CardanoWasm.TransactionBuilder.new(
     CardanoWasm.TransactionBuilderConfigBuilder.new()
       .fee_algo(
         CardanoWasm.LinearFee.new(
@@ -30,6 +30,9 @@ const initializeTxBuilder = (params) => {
       .max_tx_size(params.protocolParams.max_tx_size)
       .build(),
   );
+  const ttl = params.currentSlot + 7200;
+  builder.set_ttl(ttl);
+  return builder
 };
 
 const addOutputToTx = (
@@ -90,9 +93,8 @@ const addInputsToTx = (txBuilder, utxos, address) => {
   txBuilder.add_change_if_needed(changeAddr);
 };
 
-const buildTransaction = (txBuilder, currentSlot) => {
-  const ttl = currentSlot + 7200;
-  txBuilder.set_ttl(ttl);
+const buildTransaction = (txBuilder) => {
+
   const txBody = txBuilder.build();
   const txHash = Buffer.from(
     CardanoWasm.hash_transaction(txBody).to_bytes(),
@@ -121,7 +123,7 @@ export const composeTransaction = (
   const txBuilder = initializeTxBuilder(params);
   addOutputToTx(txBuilder, outputAddress, assetId, outputAmount);
   addInputsToTx(txBuilder, utxos, address);
-  return buildTransaction(txBuilder, params.currentSlot);
+  return buildTransaction(txBuilder);
 };
 
 export const signTransaction = (
