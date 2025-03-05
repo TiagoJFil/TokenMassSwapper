@@ -38,3 +38,10 @@ export type SwapOptionsInput = {
   selfSend?: boolean;
   distribution?: Distribution;
 };
+
+export enum APP_NETWORK {
+  MAINNET = 'mainnet',
+  PREVIEW = 'preview',
+  PREPROD = 'preprod',
+}
+

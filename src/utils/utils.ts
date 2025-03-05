@@ -1,3 +1,4 @@
+import { APP_NETWORK } from '../services/types';
 
 export function selectItemBasedOnProbability(table: { [key: number]: number }): number {
   const totalWeight = Object.values(table).reduce((sum, weight) => sum + weight, 0);
@@ -23,3 +24,17 @@ export function cutTableOutcomeHigherThan(
     Object.entries(table).filter(([key, weight]) => weight <= value),
   );
 }
+
+export function parseCardanoNetwork(network: string): 'mainnet' | 'preview' | 'preprod' | 'sanchonet' {
+  switch (network) {
+    case APP_NETWORK.MAINNET:
+      return 'mainnet';
+    case APP_NETWORK.PREPROD:
+      return 'preprod';
+    case APP_NETWORK.PREVIEW:
+      return 'preview';
+  }
+  console.log(network);
+  throw new Error('Invalid network');
+}
+
