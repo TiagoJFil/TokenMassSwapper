@@ -1,6 +1,6 @@
 
 export class NESTJS {
-    public static IS_MAINNET_PROVIDER_KEY = 'IS_MAINNET_PROVIDER_KEY'
+    public static NETWORK_PROVIDER_KEY = 'IS_MAINNET_PROVIDER_KEY'
     public static DEXHUNTER_CONFIG_PROVIDER_KEY = 'DEXHUNTER_CONFIG'
     public static BLOCKFROST_CONFIG_PROVIDER_KEY = 'BLOCKFROST_CONFIG'
     public static TX_SUBMITTER_PROVIDER_KEY = "TX_SUBMITTER_PROVIDER_KEY";
@@ -13,7 +13,7 @@ export class CARDANO {
 }
 
 
-export class TOKEN_BUY_WEIGHTS {
+export class TOKEN_BUY_WEIGHTS_TABLES {
     public static SIMPLE = {
         0.3: 25,
         0.2: 69,
@@ -24,6 +24,17 @@ export class TOKEN_BUY_WEIGHTS {
     }
 }
 
+export class TOKEN_DISTRIBUTE_WEIGHTS_TABLES {
+    public static SIMPLE = {
+        0.3: 36,
+        0.2: 80,
+        0.06: 111,
+        0.11: 61,
+        0.19: 51,
+        0.14: 41
+    }
+}
+
 export class TOKEN_BUY_HYPED_VALUES{
     public static START = 25
     public static MID = 50
@@ -31,7 +42,7 @@ export class TOKEN_BUY_HYPED_VALUES{
 }
 
 export class ENV {
-    public static IS_MAINNET = 'IS_MAINNET'
+    public static BLOCKCHAIN_NETWORK = 'BLOCKCHAIN_NETWORK'
     public static DEXHUNTER_API_BASE_URL = 'DEXHUNTER_API_BASE_URL'
     public static DEXHUNTER_PARTNER_ID = 'DEXHUNTER_PARTNER_ID'
     public static BLOCKFROST_API_KEY = 'BLOCKFROST_API_KEY'
@@ -40,5 +51,5 @@ export class ENV {
     public static DB_USERNAME = "DB_USERNAME" ;
     public static DB_PASSWORD = "DB_PASSWORD" ;
     public static DB_DATABASE = "DB_DATABASE" ;
-    static CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT= "CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT";
+    public static CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT= "CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT";
 }

@@ -1,10 +1,10 @@
 import { Responses } from "@blockfrost/blockfrost-js";
-import { CardanoNetwork } from "@blockfrost/blockfrost-js/lib/types";
+
 
 export class BlockFrostConfig {
         apiKey: string;
-        network: CardanoNetwork;
-        constructor(apiKey: string, network: CardanoNetwork) {
+        network: 'mainnet' | 'preview' | 'preprod' | 'sanchonet';
+        constructor(apiKey: string, network: 'mainnet' | 'preview' | 'preprod' | 'sanchonet') {
             this.apiKey = apiKey;
             this.network = network
         }

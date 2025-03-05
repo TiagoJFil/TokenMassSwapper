@@ -28,10 +28,9 @@ export class WalletController {
     @Param('user_id',ParseIntPipe) user_id: number
   ): Promise<OutputDTOs> {
     const walletInfo = await this.walletService.getUserPublicWalletInfo(user_id);
-    const adaBalance = await this.cardanoTokenService.getAdaBalance(walletInfo.address);
-    const tokenBalances = await this.cardanoTokenService.getTokenBalances(walletInfo.stakeKey);
+    const walletBalances = await this.cardanoTokenService.getWalletBalances(walletInfo.address);
     // @ts-ignore
-    return new OutputDTOs(walletInfo.address,adaBalance, tokenBalances);
+    return new OutputDTOs(walletInfo.address,walletBalances.ada, walletBalances.tokens);
   }
 
   @Get("user/:user_id/replicas/")
@@ -39,11 +38,9 @@ export class WalletController {
     @Param('user_id',ParseIntPipe) user_id: number
   ): Promise<OutputDTOs[]> {
     const replicas = await this.walletService.getActiveReplicaWallets(user_id);
-    return Promise.all(replicas.map( async(replica) => {
-      const adaBalance = await this.cardanoTokenService.getAdaBalance(replica.address);
-
-      const tokenBalances = await this.cardanoTokenService.getTokenBalances(replica.stakeAddress);
-      return new OutputDTOs(replica.address, adaBalance, tokenBalances);
+    return await Promise.all(replicas.map( async(replica) => {
+      const walletBalances = await this.cardanoTokenService.getWalletBalances(replica.address);
+      return new OutputDTOs(replica.address, walletBalances.ada, walletBalances.tokens);
     }));
   }
 

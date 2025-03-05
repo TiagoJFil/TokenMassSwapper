@@ -17,10 +17,17 @@ export type PublicWalletInfo = {
 }
 
 export type AssetInfo = {
-  assetId: string,
   policyId: string,
+  assetId: string,
   assetName: string,
   ticker: string
+}
+
+export type AssetInfoDTO= {
+  policyId: string;
+  assetName: string;
+  ticker: string;
+  quantity: number
 }
 
 export enum SWAP {
@@ -38,3 +45,16 @@ export type SwapOptionsInput = {
   selfSend?: boolean;
   distribution?: Distribution;
 };
+
+export enum APP_NETWORK {
+  MAINNET = 'mainnet',
+  PREVIEW = 'preview',
+  PREPROD = 'preprod',
+}
+
+export type OutputTxInfo = {assetId?: string, address: string, amount: number}
+
+export type AdaSendInfo = {
+  address: string,
+  amount: number
+}

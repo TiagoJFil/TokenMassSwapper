@@ -3,66 +3,80 @@ import { Responses } from '@blockfrost/blockfrost-js';
 import { UTXO } from './BlockFrostConfig';
 import { bech32 } from 'bech32';
 import { CardanoUtils } from '../../utils';
+import { OutputTxInfo } from '../../../types';
 
-export const composeTransaction = (
-  address: string,
-  outputAddress: string,
-  outputAmount: number,
-  utxos: UTXO,
-  params: {
-    protocolParams: Responses['epoch_param_content'];
-    currentSlot: number;
-  },
-): {
-  txHash: string;
-  txBody: CardanoWasm.TransactionBody;
-} => {
-  if (!utxos || utxos.length === 0) {
-    throw Error(`No utxo on address ${address}`); // custom error should be caught by the controller
-  }
-
-  const txBuilder = CardanoWasm.TransactionBuilder.new(
+const initializeTxBuilder = (params) => {
+  const builder = CardanoWasm.TransactionBuilder.new(
     CardanoWasm.TransactionBuilderConfigBuilder.new()
       .fee_algo(
-        CardanoWasm.LinearFee.new(CardanoWasm.BigNum.from_str(params.protocolParams.min_fee_a.toString()), CardanoWasm.BigNum.from_str(params.protocolParams.min_fee_b.toString()),
+        CardanoWasm.LinearFee.new(
+          CardanoWasm.BigNum.from_str(
+            params.protocolParams.min_fee_a.toString(),
+          ),
+          CardanoWasm.BigNum.from_str(
+            params.protocolParams.min_fee_b.toString(),
+          ),
         ),
       )
-      .pool_deposit(CardanoWasm.BigNum.from_str(params.protocolParams.pool_deposit))
-      .key_deposit(CardanoWasm.BigNum.from_str(params.protocolParams.key_deposit))
-      .coins_per_utxo_byte(CardanoWasm.BigNum.from_str(params.protocolParams.coins_per_utxo_size!))
+      .pool_deposit(
+        CardanoWasm.BigNum.from_str(params.protocolParams.pool_deposit),
+      )
+      .key_deposit(
+        CardanoWasm.BigNum.from_str(params.protocolParams.key_deposit),
+      )
+      .coins_per_utxo_byte(
+        CardanoWasm.BigNum.from_str(params.protocolParams.coins_per_utxo_size!),
+      )
       .max_value_size(parseInt(params.protocolParams.max_val_size!))
       .max_tx_size(params.protocolParams.max_tx_size)
       .build(),
   );
-
-  const outputAddr = CardanoWasm.Address.from_bech32(outputAddress);
-  const changeAddr = CardanoWasm.Address.from_bech32(address);
-
-  // Set TTL to +2h from currentSlot
-  // If the transaction is not included in a block before that slot it will be cancelled.
   const ttl = params.currentSlot + 7200;
-  txBuilder.set_ttl(ttl);
+  builder.set_ttl(ttl);
+  return builder
+};
 
-  // Add output to the tx
+const addOutputToTx = (
+  txBuilder,
+  outputAddress,
+  asset = 'lovelace',
+  outputAmount,
+) => {
+  const outputAddr = CardanoWasm.Address.from_bech32(outputAddress);
+
+  let outputAsset;
+  if (asset === 'lovelace') {
+    outputAsset = CardanoWasm.Value.new(
+      CardanoWasm.BigNum.from_str(
+        CardanoUtils.toLovelace(outputAmount).toString(),
+      ),
+    );
+  } else {
+    outputAsset = CardanoWasm.Assets.new();
+    outputAsset.insert(
+      CardanoWasm.AssetName.new(Buffer.from(asset, 'hex')),
+      CardanoWasm.BigNum.from_str(outputAmount.toString()),
+    );
+  }
   txBuilder.add_output(
-    CardanoWasm.TransactionOutput.new(
-      outputAddr,
-      CardanoWasm.Value.new(CardanoWasm.BigNum.from_str(CardanoUtils.toLovelace(outputAmount).toString())),
-    ),
+    CardanoWasm.TransactionOutput.new(outputAddr, outputAsset),
   );
+};
 
-  // Filter out multi asset utxo to keep this simple
-  const lovelaceUtxos = utxos.filter((u: any) => !u.amount.find((a: any) => a.unit !== 'lovelace'));
-
-  // Create TransactionUnspentOutputs from utxos fetched from Blockfrost
+const addInputsToTx = (txBuilder, utxos, address) => {
+  const changeAddr = CardanoWasm.Address.from_bech32(address);
+  const lovelaceUtxos = utxos.filter(
+    (u) => !u.amount.find((a) => a.unit !== 'lovelace'),
+  );
   const unspentOutputs = CardanoWasm.TransactionUnspentOutputs.new();
-  for (const utxo of lovelaceUtxos) {
-    const amount = utxo.amount.find((a: any) => a.unit === 'lovelace')?.quantity;
 
+  for (const utxo of lovelaceUtxos) {
+    const amount = utxo.amount.find((a) => a.unit === 'lovelace')?.quantity;
     if (!amount) continue;
 
-    const inputValue = CardanoWasm.Value.new(CardanoWasm.BigNum.from_str(amount.toString()));
-
+    const inputValue = CardanoWasm.Value.new(
+      CardanoWasm.BigNum.from_str(amount.toString()),
+    );
     const input = CardanoWasm.TransactionInput.new(
       CardanoWasm.TransactionHash.from_bytes(Buffer.from(utxo.tx_hash, 'hex')),
       utxo.output_index,
@@ -71,20 +85,46 @@ export const composeTransaction = (
     unspentOutputs.add(CardanoWasm.TransactionUnspentOutput.new(input, output));
   }
 
-  txBuilder.add_inputs_from(unspentOutputs, CardanoWasm.CoinSelectionStrategyCIP2.LargestFirst);
+  txBuilder.add_inputs_from(
+    unspentOutputs,
+    CardanoWasm.CoinSelectionStrategyCIP2.LargestFirst,
+  );
 
-  // Adds a change output if there are more ADA in utxo than we need for the transaction,
-  // these coins will be returned to change address
+
   txBuilder.add_change_if_needed(changeAddr);
+};
 
-  // Build transaction
+const buildTransaction = (txBuilder) => {
+
   const txBody = txBuilder.build();
-  const txHash = Buffer.from(CardanoWasm.hash_transaction(txBody).to_bytes()).toString('hex');
+  const txHash = Buffer.from(
+    CardanoWasm.hash_transaction(txBody).to_bytes(),
+  ).toString('hex');
+  return { txHash, txBody };
+};
 
-  return {
-    txHash,
-    txBody,
-  };
+export const composeTransaction = (
+  address: string,
+  utxos: UTXO,
+  params: {
+    protocolParams: Responses['epoch_param_content'];
+    currentSlot: number;
+  },
+  outputInfo: OutputTxInfo[],
+): {
+  txHash: string;
+  txBody: CardanoWasm.TransactionBody;
+} => {
+  if (!utxos || utxos.length === 0) {
+    throw Error(`No utxo on address ${address}`);
+  }
+
+  const txBuilder = initializeTxBuilder(params);
+  outputInfo.forEach(({assetId, address: outAddress, amount: outputAmount}) =>
+    addOutputToTx(txBuilder, outAddress, assetId ?? "lovelace", outputAmount)
+  );
+  addInputsToTx(txBuilder, utxos, address);
+  return buildTransaction(txBuilder);
 };
 
 export const signTransaction = (
@@ -99,9 +139,7 @@ export const signTransaction = (
 
   witnesses.set_vkeys(vkeyWitnesses);
 
-  const transaction = CardanoWasm.Transaction.new(txBody, witnesses);
-
-  return transaction;
+  return CardanoWasm.Transaction.new(txBody, witnesses);
 };
 
 export const getSignaturesForCBOR = (
@@ -129,13 +167,14 @@ export const signTransactionFromCBOR = (
   const signatures = getSignaturesForCBOR(cbor, ...keys);
   const tx = CardanoWasm.Transaction.from_bytes(Buffer.from(cbor, 'hex'));
   return CardanoWasm.Transaction.new(
-      tx.body(),
-      CardanoWasm.TransactionWitnessSet.from_bytes(Buffer.from(signatures, 'hex')),
-    ).to_hex()
-
-}
+    tx.body(),
+    CardanoWasm.TransactionWitnessSet.from_bytes(
+      Buffer.from(signatures, 'hex'),
+    ),
+  ).to_hex();
+};
 
 export const bech32_encode = (data: Uint8Array, prefix: string) => {
   const words = bech32.toWords(data);
   return bech32.encode(prefix, words);
-}
+};

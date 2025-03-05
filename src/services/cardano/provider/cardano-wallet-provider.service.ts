@@ -3,9 +3,9 @@ import { mnemonicToEntropy,generateMnemonic } from 'bip39';
 import * as CardanoWasm from '@emurgo/cardano-serialization-lib-nodejs';
 import { CardanoUtils } from '../utils';
 import { NESTJS } from '../../../utils/constants';
-import { bech32 } from 'bech32';
 import { Address, BaseAddress, RewardAddress } from '@emurgo/cardano-serialization-lib-nodejs';
-import { KeypairInfo, MyMnemonic } from '../../types';
+import {  KeypairInfo, MyMnemonic } from '../../types';
+
 
 @Injectable()
 export class CardanoWalletProviderService {
@@ -13,13 +13,19 @@ export class CardanoWalletProviderService {
   private network_id : number ;
 
   constructor(
-    @Inject(NESTJS.IS_MAINNET_PROVIDER_KEY)
-    is_mainnet : boolean
+    @Inject(NESTJS.NETWORK_PROVIDER_KEY)
+    network : 'mainnet' | 'preview' | 'preprod' | 'sanchonet'
   ) {
-    if (is_mainnet == true){
-      this.network_id = CardanoWasm.NetworkInfo.mainnet().network_id()
-    }else{
-      this.network_id = CardanoWasm.NetworkInfo.testnet_preview().network_id()
+    switch (network){
+      case 'mainnet':
+        this.network_id = CardanoWasm.NetworkInfo.mainnet().network_id()
+        break;
+      case 'preview':
+        this.network_id = CardanoWasm.NetworkInfo.testnet_preview().network_id()
+        break;
+      case 'preprod':
+        this.network_id = CardanoWasm.NetworkInfo.testnet_preprod().network_id()
+        break;
     }
   }
 

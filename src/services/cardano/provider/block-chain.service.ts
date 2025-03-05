@@ -7,7 +7,7 @@ import {
 import { BlockFrostConfig, UTXO } from './blockfrost/BlockFrostConfig';
 import { composeTransaction, signTransaction } from './blockfrost/helpers';
 import { CardanoUtils } from '../utils';
-import { AssetInfo } from '../../types';
+import { AdaSendInfo, AssetInfo, OutputTxInfo } from '../../types';
 
 @Injectable()
 export class BlockChainService {
@@ -43,7 +43,6 @@ export class BlockChainService {
     if (!assetInfo) {
       throw new Error('Asset not found');
     }
-    console.log(assetInfo);
     if (assetInfo.onchain_metadata_standard === 'CIP25v2' || assetInfo.onchain_metadata_standard === 'CIP25v1') {
 
       return {
@@ -77,6 +76,41 @@ export class BlockChainService {
     return CardanoUtils.toAda(lovelaceBalance);
     // Implement the logic to get ADA balance here
   }
+
+  async getWalletBalances(walletAddress) {
+    let allWalletAssetsInfo : {
+      address: string;
+      amount: { unit: string; quantity: string }[];
+      stake_address: string | null;
+      type: "byron" | "shelley";
+      script: boolean
+    };
+    try {
+      allWalletAssetsInfo = await this.API.addresses(walletAddress);
+    } catch (e: any) {
+      if (e instanceof BlockfrostServerError && e.status_code == 404) {
+        return {
+          adaBal: 0,
+          tokens: []
+        };
+      } else {
+        throw e;
+      }
+    }
+    const lovelaceBalance = allWalletAssetsInfo.amount.find(
+      (asset) => asset.unit === 'lovelace',
+    ).quantity;
+    const adaBal = CardanoUtils.toAda(lovelaceBalance);
+    const tokensInfo = allWalletAssetsInfo.amount.filter(
+      (asset) => asset.unit !== 'lovelace'
+    );
+
+    return {
+      adaBal,
+      tokens: tokensInfo
+    }
+  }
+
 
 
   async fetchTransactionData( senderAddress) {
@@ -113,26 +147,46 @@ export class BlockChainService {
    * Sends Ada from sender to receiver
    * @param senderSignKey
    * @param senderAddress
-   * @param receiverAddress
-   * @param amount
+   * @param sendInfo
    */
-  async sendCardano(senderSignKey, senderAddress, receiverAddress, amount:number ) {
+  async sendCardano(senderSignKey, senderAddress, sendInfo : AdaSendInfo | AdaSendInfo[] ) {
+    if (!Array.isArray(sendInfo)) {
+      sendInfo = [sendInfo];
+    }
+    const outputTxInfo : OutputTxInfo[] = sendInfo.map(
+      (info) => {
+        return {
+          address: info.address,
+          amount: info.amount,
+          assetId: 'lovelace'
+        }
+      }
+    )
+    return await this.sendTransaction(senderSignKey, senderAddress, outputTxInfo);
+  }
+
+  async sendToken(senderSignKey, senderAddress, receiverAddress, amount:number, assetId) {
+    await this.sendTransaction(senderSignKey, senderAddress, {address: receiverAddress, amount: amount, assetId: assetId});
+  }
+
+  private async sendTransaction(senderSignKey, senderAddress,  outputTxinfo : OutputTxInfo | OutputTxInfo[] ) {
     const { protocolParams, utxo, currentSlot } = await this.fetchTransactionData(senderAddress);
 
+    if (!Array.isArray(outputTxinfo)) {
+      outputTxinfo = [outputTxinfo];
+    }
     // Prepare transaction
     const { txBody } = composeTransaction(
       senderAddress,
-      receiverAddress,
-      amount,
       utxo,
       {
         protocolParams,
         currentSlot,
       },
+      outputTxinfo
     );
     // Sign transaction
     const transaction = signTransaction(txBody, senderSignKey);
-
 
     try {
       const txHash = await this.txSubmitter.submitTx(transaction.to_bytes());
@@ -144,6 +198,7 @@ export class BlockChainService {
       console.log(JSON.stringify(mempoolTx, undefined, 4));
 
       console.log(`Transaction successfully submitted: ${txHash}\n`);
+      return txHash
     } catch (error) {
       // submit could fail if the transactions is rejected by cardano node
       if (error instanceof BlockfrostServerError && error.status_code === 400) {
@@ -153,9 +208,5 @@ export class BlockChainService {
         throw error;
       }
     }
-  }
-
-  async sendToken(senderSignKey, senderAddress, receiverAddress, amount:number, assetId) {
-
   }
 }
