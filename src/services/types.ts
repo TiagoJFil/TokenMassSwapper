@@ -52,3 +52,9 @@ export enum APP_NETWORK {
   PREPROD = 'preprod',
 }
 
+export type OutputTxInfo = {assetId?: string, address: string, amount: number}
+
+export type AdaSendInfo = {
+  address: string,
+  amount: number
+}

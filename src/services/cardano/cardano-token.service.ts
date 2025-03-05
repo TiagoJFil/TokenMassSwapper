@@ -14,6 +14,7 @@ import {
 } from '../../utils/constants';
 import { ReplicaWalletEntity } from '../../model/entities/wallet/replica-wallet.entity';
 import {
+  AdaSendInfo,
   AssetInfo,
   AssetInfoDTO,
   Distribution,
@@ -307,64 +308,54 @@ export class CardanoTokenService {
         const amountForEach = Math.floor(
           amountAllocatedFromMain / totalReplicas,
         );
-        const sentAmounts = [];
-        await Promise.all(
-          replicas.map(async (replica) => {
-            const bal = Math.floor(
-              await this.chainService.getAdaBalance(replica.address),
-            );
-            const amountToTransfer = amountForEach - bal;
-            console.log(amountToTransfer);
-            if (amountToTransfer <= 0) {
-              return 0;
-            }
-            if (amountToTransfer < amountForEach) {
-              extraAmount += amountForEach - amountToTransfer;
-            }
-            sentAmounts.push(amountToTransfer);
-            await this.chainService.sendCardano(
-              mainWalletKeyPair.privateKey,
-              mainWalletAddress,
-              replica.address,
-              amountToTransfer,
-            );
-          }),
+
+        const adaSendInfo : AdaSendInfo[] =replicas.map((replica) => {
+          return {
+            address: replica.address,
+            amount: amountForEach,
+          }
+        })
+        const txHash = await this.chainService.sendCardano(
+          mainWalletKeyPair.privateKey,
+          mainWalletAddress,
+          adaSendInfo,
         );
+
         return {
-          amounts: sentAmounts,
+          amounts: adaSendInfo,
           extra: extraAmount,
+          txHash,
         };
       }
       case Distribution.WEIGHTED: {
         const probabilityTable = TOKEN_DISTRIBUTE_WEIGHTS_TABLES.SIMPLE;
-        const sentAmounts = [];
+
         let alreadySent = 0;
         let totalAmount = amountAllocatedFromMain;
-        await Promise.all(
-          replicas.map(async (replica) => {
-            const amtToSend = selectItemBasedOnProbability(probabilityTable);
 
-            totalAmount -= amtToSend;
-            if (totalAmount < 0) {
-              extraAmount =  totalAmount - alreadySent
-              return {
-                amounts: sentAmounts,
-              };
-            }
-            await this.chainService.sendCardano(
-              mainWalletKeyPair.privateKey,
-              mainWalletAddress,
-              replica.address,
-              amtToSend,
-            );
+        let adaSendInfo : AdaSendInfo[] = []
+        for (const currReplica of replicas) {
+          const amtToSend = selectItemBasedOnProbability(probabilityTable);
+          if (totalAmount < 0) {
+            extraAmount = totalAmount - alreadySent;
+            break;
+          }
+          alreadySent += amtToSend
+          adaSendInfo.push({
+            address: currReplica.address,
+            amount: amtToSend,
+          });
+        }
 
-            sentAmounts.push(amtToSend);
-            alreadySent += amtToSend;
-          }),
+        const txHash = await this.chainService.sendCardano(
+          mainWalletKeyPair.privateKey,
+          mainWalletAddress,
+          adaSendInfo
         );
         return {
-          amounts: sentAmounts,
+          amounts: adaSendInfo,
           extra: extraAmount,
+          txHash,
         };
       }
     }

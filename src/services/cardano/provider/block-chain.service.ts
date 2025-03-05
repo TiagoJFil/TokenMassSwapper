@@ -7,7 +7,7 @@ import {
 import { BlockFrostConfig, UTXO } from './blockfrost/BlockFrostConfig';
 import { composeTransaction, signTransaction } from './blockfrost/helpers';
 import { CardanoUtils } from '../utils';
-import { AssetInfo } from '../../types';
+import { AdaSendInfo, AssetInfo, OutputTxInfo } from '../../types';
 
 @Injectable()
 export class BlockChainService {
@@ -97,7 +97,6 @@ export class BlockChainService {
         throw e;
       }
     }
-    console.log(allWalletAssetsInfo);
     const lovelaceBalance = allWalletAssetsInfo.amount.find(
       (asset) => asset.unit === 'lovelace',
     ).quantity;
@@ -148,31 +147,43 @@ export class BlockChainService {
    * Sends Ada from sender to receiver
    * @param senderSignKey
    * @param senderAddress
-   * @param receiverAddress
-   * @param amount
+   * @param sendInfo
    */
-  async sendCardano(senderSignKey, senderAddress, receiverAddress, amount:number ) {
-    await this.sendTransaction(senderSignKey, senderAddress, receiverAddress, amount, 'lovelace');
+  async sendCardano(senderSignKey, senderAddress, sendInfo : AdaSendInfo | AdaSendInfo[] ) {
+    if (!Array.isArray(sendInfo)) {
+      sendInfo = [sendInfo];
+    }
+    const outputTxInfo : OutputTxInfo[] = sendInfo.map(
+      (info) => {
+        return {
+          address: info.address,
+          amount: info.amount,
+          assetId: 'lovelace'
+        }
+      }
+    )
+    return await this.sendTransaction(senderSignKey, senderAddress, outputTxInfo);
   }
 
   async sendToken(senderSignKey, senderAddress, receiverAddress, amount:number, assetId) {
-    await this.sendTransaction(senderSignKey, senderAddress, receiverAddress, amount, assetId);
+    await this.sendTransaction(senderSignKey, senderAddress, {address: receiverAddress, amount: amount, assetId: assetId});
   }
 
-  private async sendTransaction(senderSignKey, senderAddress, receiverAddress, amount:number, assetId) {
+  private async sendTransaction(senderSignKey, senderAddress,  outputTxinfo : OutputTxInfo | OutputTxInfo[] ) {
     const { protocolParams, utxo, currentSlot } = await this.fetchTransactionData(senderAddress);
 
+    if (!Array.isArray(outputTxinfo)) {
+      outputTxinfo = [outputTxinfo];
+    }
     // Prepare transaction
     const { txBody } = composeTransaction(
       senderAddress,
-      receiverAddress,
-      amount,
       utxo,
       {
         protocolParams,
         currentSlot,
       },
-      assetId
+      outputTxinfo
     );
     // Sign transaction
     const transaction = signTransaction(txBody, senderSignKey);
@@ -187,6 +198,7 @@ export class BlockChainService {
       console.log(JSON.stringify(mempoolTx, undefined, 4));
 
       console.log(`Transaction successfully submitted: ${txHash}\n`);
+      return txHash
     } catch (error) {
       // submit could fail if the transactions is rejected by cardano node
       if (error instanceof BlockfrostServerError && error.status_code === 400) {

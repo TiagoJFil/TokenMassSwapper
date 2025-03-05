@@ -3,6 +3,7 @@ import { Responses } from '@blockfrost/blockfrost-js';
 import { UTXO } from './BlockFrostConfig';
 import { bech32 } from 'bech32';
 import { CardanoUtils } from '../../utils';
+import { OutputTxInfo } from '../../../types';
 
 const initializeTxBuilder = (params) => {
   const builder = CardanoWasm.TransactionBuilder.new(
@@ -104,14 +105,12 @@ const buildTransaction = (txBuilder) => {
 
 export const composeTransaction = (
   address: string,
-  outputAddress: string,
-  outputAmount: number,
   utxos: UTXO,
   params: {
     protocolParams: Responses['epoch_param_content'];
     currentSlot: number;
   },
-  assetId?: string,
+  outputInfo: OutputTxInfo[],
 ): {
   txHash: string;
   txBody: CardanoWasm.TransactionBody;
@@ -121,7 +120,9 @@ export const composeTransaction = (
   }
 
   const txBuilder = initializeTxBuilder(params);
-  addOutputToTx(txBuilder, outputAddress, assetId, outputAmount);
+  outputInfo.forEach(({assetId, address: outAddress, amount: outputAmount}) =>
+    addOutputToTx(txBuilder, outAddress, assetId ?? "lovelace", outputAmount)
+  );
   addInputsToTx(txBuilder, utxos, address);
   return buildTransaction(txBuilder);
 };
