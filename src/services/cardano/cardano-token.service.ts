@@ -23,7 +23,11 @@ import {
   SwapOptionsInput,
 } from '../types';
 import { CardanoWalletProviderService } from './provider/cardano-wallet-provider.service';
-import { selectItemBasedOnProbability } from '../../utils/utils';
+import {
+  cutTableOutcomeHigherThan,
+  selectItemBasedOnProbability,
+} from '../../utils/utils';
+import { WalletBuyCache } from '../cache/WalletBuyCache';
 
 @Injectable()
 export class CardanoTokenService {
@@ -32,6 +36,7 @@ export class CardanoTokenService {
     private readonly chainService: BlockChainService,
     private readonly walletService: WalletService,
     private readonly walletProvider: CardanoWalletProviderService,
+    private readonly walletBuyCache: WalletBuyCache
   ) {}
 
   private async getCardanoTokenMetadata(assetId: string): Promise<AssetInfo> {
@@ -136,20 +141,26 @@ export class CardanoTokenService {
         );
       }
       case Distribution.WEIGHTED: {
-        //TODO see logic about weighted distribution
-        //TODO think about wallet balances
+        //TODO add a cache with hint, and and endpoint to prepare the swap
+
+        const amounts = await Promise.all(Array(replicaWallets.length).map(
+          async() => {
+            const bal = await this.getTokenBalance(userWallet.address, policyId);
+            const newTable = cutTableOutcomeHigherThan(TOKEN_DISTRIBUTE_WEIGHTS_TABLES.SIMPLE,bal- CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE)  // - 10 to avoid sending all the balance
+            return selectItemBasedOnProbability(newTable)
+          }));
+
+        return await this.multipleWalletSwapToken(
+          SWAP.BUY,
+          policyId,
+          userWallet.address,
+          replicaWallets,
+          amounts,
+          options,
+        );
       }
     }
 
-    //selectItemBasedOnProbability
-    return await this.multipleWalletSwapToken(
-      SWAP.BUY,
-      policyId,
-      userWallet.address,
-      replicaWallets,
-      amount,
-      options,
-    );
   }
 
   async multipleWalletSellToken(
@@ -280,12 +291,9 @@ export class CardanoTokenService {
   ) {
     const replicas = await this.walletService.getActiveReplicaWallets(userId);
     const userWallet = await this.walletService.getUserWallet(userId);
-    const mainWalletKeyPair = this.walletProvider.deriveUserKeyPair(
-      userWallet.mnemonic,
-    );
+    const mainWalletKeyPair = this.walletProvider.deriveUserKeyPair(userWallet.mnemonic);
     const mainWalletAddress = userWallet.address;
-    const userWalletBalance =
-      await this.chainService.getAdaBalance(mainWalletAddress);
+    const userWalletBalance = await this.chainService.getAdaBalance(mainWalletAddress);
     if (userWalletBalance < amountAllocatedFromMain) {
       throw new NotEnoughFunds(mainWalletAddress);
     }
@@ -359,6 +367,28 @@ export class CardanoTokenService {
         };
       }
     }
+  }
+
+  async prepareBuyTransactionCache(userId: number) {
+    const hasCache = await this.walletBuyCache.hasCachedBuyWeights(userId);
+    if (hasCache) {
+      await this.walletBuyCache.invalidateCache(userId);
+    }
+
+    const replicaWallets = await this.walletService.getActiveReplicaWallets(userId);
+    const distributedBalances = await Promise.all(replicaWallets.map(async (wallet) => {
+      const bal = await this.getAdaBalance(wallet.address);
+      const newTable = cutTableOutcomeHigherThan(TOKEN_DISTRIBUTE_WEIGHTS_TABLES.SIMPLE, bal - CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE);
+      return selectItemBasedOnProbability(newTable);
+    }));
+
+    const cacheData = {
+      walletCount: replicaWallets.length,
+      distributedBalances,
+    };
+
+    await this.walletBuyCache.addToCache(userId, cacheData);
+    return cacheData;
   }
 }
 
