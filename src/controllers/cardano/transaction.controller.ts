@@ -19,6 +19,16 @@ export class TransactionController {
   constructor(private readonly walletService: WalletService,
               private readonly cardanoTokenService: CardanoTokenService) {}
   //BEFORE THIS OPERATION, a swap check has had to be called to ensure that the swap is possible
+
+  @Post("user/:user_id/buy/prepare")
+  @Transactional()
+  async prepareBuyTransaction(
+    @Param('user_id',ParseIntPipe) userId: number,
+  ): Promise<any> {
+    const res = await this.cardanoTokenService.prepareBuyTransactionCache(userId);
+    return res;
+  }
+
   @Post("user/:user_id/buy/:policy_id/")
   @Transactional()
   async buyTokenWithReplicas(
@@ -50,7 +60,7 @@ export class TransactionController {
 
 
 
-  @Post("user/:user_id/replicas/prepare")
+  @Post("user/:user_id/replicas/distribute")
   @Transactional()
   async prepareReplicaWallets(
     @Param('user_id',ParseIntPipe) userId: number,

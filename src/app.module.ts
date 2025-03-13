@@ -11,7 +11,8 @@ import {
   BlockfrostConfigProvider, CustomNodeEndpointProvider,
   DexhunterConfigProvider,
   NetworkProvider, TxSubmitterProvider,
-} from './nextjs/providers';
+  WalletBuyCacheProvider,
+} from './nestjs/providers';
 import { CardanoWalletProviderService } from './services/cardano/provider/cardano-wallet-provider.service';
 import { ENV } from './utils/constants';
 import { UserService } from './services/user.service';
@@ -23,8 +24,18 @@ import { WalletManagerEntity } from './model/entities/wallet-manager.entity';
 import { TransactionController } from './controllers/cardano/transaction.controller';
 import { NodeTxSubmitterService } from './services/cardano/provider/node/node-tx-submitter.service';
 import { BlockFrostTxSubmitterService } from './services/cardano/provider/node/blockfrost-tx-submitter.service';
+import { BuyWeightsCache } from './model/entities/BuyWeightsCache';
+import { DbWalletBuyCache } from './services/cache/DbWalletBuyCache';
 
 require('dotenv').config();
+
+
+@Module({
+  imports: [TypeOrmModule.forFeature([BuyWeightsCache])],
+  providers: [DbWalletBuyCache,WalletBuyCacheProvider],
+  exports: [WalletBuyCacheProvider],
+})
+
 
 @Module({
   imports: [

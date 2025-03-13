@@ -58,3 +58,8 @@ export type AdaSendInfo = {
   address: string,
   amount: number
 }
+
+export type BuyWeightsCacheType = {
+  walletCount: number;
+  buyAmounts: number[];
+};

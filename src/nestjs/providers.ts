@@ -6,6 +6,7 @@ import { NotFoundEnvVarError } from '../services/exceptions/custom';
 import { BlockFrostTxSubmitterService } from '../services/cardano/provider/node/blockfrost-tx-submitter.service';
 import { NodeTxSubmitterService } from '../services/cardano/provider/node/node-tx-submitter.service';
 import { parseCardanoNetwork } from '../utils/utils';
+import { DbWalletBuyCache } from 'src/services/cache/DbWalletBuyCache';
 
 export const DexhunterConfigProvider: Provider = {
   provide: NESTJS.DEXHUNTER_CONFIG_PROVIDER_KEY,
@@ -22,6 +23,12 @@ export const DexhunterConfigProvider: Provider = {
 export const CustomNodeEndpointProvider: Provider = {
   provide: NESTJS.CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT,
   useFactory: () => process.env[ENV.CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT],
+};
+
+
+export const WalletBuyCacheProvider: Provider = {
+  provide: NESTJS.WALLET_BUY_CACHE_PROVIDER_KEY,
+  useClass: DbWalletBuyCache,
 };
 
 export const TxSubmitterProvider: Provider = {

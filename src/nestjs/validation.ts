@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, ParseIntPipe, PipeTransform, ValidationPipe,ArgumentMetadata  } from '@nestjs/common';
-import { ValidationError, ValidatorOptions } from 'class-validator';
 
 export const numberValidationPipe = new ValidationPipe({
   transform: true,
