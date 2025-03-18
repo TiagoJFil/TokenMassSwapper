@@ -8,6 +8,11 @@ export class NESTJS {
     public static WALLET_BUY_CACHE_PROVIDER_KEY = "WALLET_BUY_CACHE_PROVIDER_KEY";
 }
 
+export class CACHE {
+
+    public static WALLET_BUY_PREFIX = 'wallet_buy_';
+}
+
 export class CARDANO {
     public static ADA_POLICY_ID = ""
     public static INDIVIDUAL_WALLET_MIN_BALANCE = 10

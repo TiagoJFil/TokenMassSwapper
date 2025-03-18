@@ -111,6 +111,10 @@ export class BlockChainService {
     }
   }
 
+  async getBlock(){
+    return this.API.blocksLatest()
+  }
+
 
 
   async fetchTransactionData( senderAddress) {

@@ -1,35 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BuyWeightsCache } from '../../model/entities/BuyWeightsCache';
-import { WalletBuyCache } from './WalletBuyCache';
-import { BuyWeightsCacheType } from '../types';
+import { CacheEntity } from '../../model/entities/cache.entity';
+import type { BuyWeightsCacheType } from '../types';
+import { DBCache } from './DBCache';
+import { CACHE } from '../../utils/constants';
 
 @Injectable()
-export class DbWalletBuyCache implements WalletBuyCache {
+export class DbWalletBuyCache extends DBCache<number,BuyWeightsCacheType> {
   constructor(
-    @InjectRepository(BuyWeightsCache)
-    private readonly buyWeightsCacheRepository: Repository<BuyWeightsCache>,
-  ) {}
+    @InjectRepository(CacheEntity)
+    private readonly cacheEntityRepository: Repository<CacheEntity>
+    ) {
+    super(cacheEntityRepository);
+  }
+  transformID(key: number): string {
+    return CACHE.WALLET_BUY_PREFIX + Number(key);
+  }
 
-  async hasCachedBuyWeights(userID: number): Promise<boolean> {
-    const cache = await this.buyWeightsCacheRepository.findOne({ where: { userID } });
+  async hasCachedBuyWeights(key: number): Promise<boolean> {
+    const cache = this.get(key);
     return !!cache;
   }
 
-  async invalidateCache(userID: number): Promise<void> {
-    await this.buyWeightsCacheRepository.delete({ userID });
-  }
-
-  async addToCache(userId: number, cacheData: BuyWeightsCacheType): Promise<void> {
-    const cache = new BuyWeightsCache();
-    cache.userID = userId;
-    cache.data = cacheData;
-    await this.buyWeightsCacheRepository.save(cache);
-  }
-
-  async getCache(userID: number): Promise<any> {
-    const cache = await this.buyWeightsCacheRepository.findOne({ where: { userID } });
-    return cache ? cache.data : null;
-  }
 }

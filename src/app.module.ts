@@ -24,17 +24,18 @@ import { WalletManagerEntity } from './model/entities/wallet-manager.entity';
 import { TransactionController } from './controllers/cardano/transaction.controller';
 import { NodeTxSubmitterService } from './services/cardano/provider/node/node-tx-submitter.service';
 import { BlockFrostTxSubmitterService } from './services/cardano/provider/node/blockfrost-tx-submitter.service';
-import { BuyWeightsCache } from './model/entities/BuyWeightsCache';
 import { DbWalletBuyCache } from './services/cache/DbWalletBuyCache';
+import { CacheEntity } from './model/entities/cache.entity';
 
 require('dotenv').config();
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BuyWeightsCache])],
+  imports: [TypeOrmModule.forFeature([CacheEntity])],
   providers: [DbWalletBuyCache,WalletBuyCacheProvider],
-  exports: [WalletBuyCacheProvider],
+  exports: [WalletBuyCacheProvider,DbWalletBuyCache],
 })
+export class WalletBuyCacheModule {}
 
 
 @Module({
@@ -70,8 +71,11 @@ export class BlockFrostModule {}
 export class DexHunterModule {}
 
 @Module({
-  imports: [BlockFrostModule, DexHunterModule,WalletModule],
-  providers: [CardanoTokenService],
+  imports: [BlockFrostModule,
+    DexHunterModule,
+    WalletModule,
+    WalletBuyCacheModule],
+  providers: [CardanoTokenService,WalletBuyCacheModule],
   exports: [CardanoTokenService],
 })
 export class CardanoModule {}

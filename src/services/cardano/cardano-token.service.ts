@@ -16,7 +16,7 @@ import { ReplicaWalletEntity } from '../../model/entities/wallet/replica-wallet.
 import {
   AdaSendInfo,
   AssetInfo,
-  AssetInfoDTO,
+   AssetInfoDTO, type BuyWeightsCacheType,
   Distribution,
   KeypairInfo,
   SWAP,
@@ -27,16 +27,17 @@ import {
   cutTableOutcomeHigherThan,
   selectItemBasedOnProbability,
 } from '../../utils/utils';
-import { WalletBuyCache } from '../cache/WalletBuyCache';
+import type { Cache } from '../cache/Cache';
+import { DbWalletBuyCache } from '../cache/DbWalletBuyCache';
 
 @Injectable()
 export class CardanoTokenService {
   constructor(
-    private readonly tokenService: DexhunterService,
     private readonly chainService: BlockChainService,
+    private readonly tokenService: DexhunterService,
     private readonly walletService: WalletService,
     private readonly walletProvider: CardanoWalletProviderService,
-    private readonly walletBuyCache: WalletBuyCache
+    private readonly walletBuyCache: Cache<number,BuyWeightsCacheType>
   ) {}
 
   private async getCardanoTokenMetadata(assetId: string): Promise<AssetInfo> {
@@ -141,23 +142,30 @@ export class CardanoTokenService {
         );
       }
       case Distribution.WEIGHTED: {
-        //TODO add a cache with hint, and and endpoint to prepare the swap
+        const cacheHint = await this.walletBuyCache.get(userId)
 
-        const amounts = await Promise.all(Array(replicaWallets.length).map(
-          async() => {
-            const bal = await this.getTokenBalance(userWallet.address, policyId);
-            const newTable = cutTableOutcomeHigherThan(TOKEN_DISTRIBUTE_WEIGHTS_TABLES.SIMPLE,bal- CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE)  // - 10 to avoid sending all the balance
-            return selectItemBasedOnProbability(newTable)
-          }));
+        let amountsToBuy: number[];
+        if (cacheHint != null && cacheHint.walletCount == replicaWallets.length) {
+          amountsToBuy = cacheHint.buyAmounts
+        }else{
+          amountsToBuy = await Promise.all(Array(replicaWallets.length).map(
+            async() => {
+              const bal = await this.getTokenBalance(userWallet.address, policyId);
+              const newTable = cutTableOutcomeHigherThan(TOKEN_DISTRIBUTE_WEIGHTS_TABLES.SIMPLE,bal- CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE)  // - 10 to avoid sending all the balance
+              return selectItemBasedOnProbability(newTable)
+            }));
+        }
 
-        return await this.multipleWalletSwapToken(
+        const res = await this.multipleWalletSwapToken(
           SWAP.BUY,
           policyId,
           userWallet.address,
           replicaWallets,
-          amounts,
+          amountsToBuy,
           options,
         );
+        await this.walletBuyCache.invalidate(userId);
+        return res;
       }
     }
 
@@ -299,10 +307,7 @@ export class CardanoTokenService {
     }
     const totalReplicas = replicas.length;
 
-    if (
-      amountAllocatedFromMain <
-      totalReplicas * CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE
-    ) {
+    if (amountAllocatedFromMain < totalReplicas * CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE) {
       throw new NotEnoughFundsForDistro(
         mainWalletAddress,
         totalReplicas,
@@ -313,9 +318,7 @@ export class CardanoTokenService {
     let extraAmount = 0;
     switch (distribution) {
       case Distribution.UNIFORM: {
-        const amountForEach = Math.floor(
-          amountAllocatedFromMain / totalReplicas,
-        );
+        const amountForEach = Math.floor(amountAllocatedFromMain / totalReplicas,);
 
         const adaSendInfo : AdaSendInfo[] =replicas.map((replica) => {
           return {
@@ -360,6 +363,7 @@ export class CardanoTokenService {
           mainWalletAddress,
           adaSendInfo
         );
+
         return {
           amounts: adaSendInfo,
           extra: extraAmount,
@@ -370,9 +374,9 @@ export class CardanoTokenService {
   }
 
   async prepareBuyTransactionCache(userId: number) {
-    const hasCache = await this.walletBuyCache.hasCachedBuyWeights(userId);
+    const hasCache = await this.walletBuyCache.get(userId);
     if (hasCache) {
-      await this.walletBuyCache.invalidateCache(userId);
+      await this.walletBuyCache.invalidate(userId);
     }
 
     const replicaWallets = await this.walletService.getActiveReplicaWallets(userId);
@@ -384,10 +388,10 @@ export class CardanoTokenService {
 
     const cacheData = {
       walletCount: replicaWallets.length,
-      distributedBalances,
+      buyAmounts: distributedBalances,
     };
 
-    await this.walletBuyCache.addToCache(userId, cacheData);
+    await this.walletBuyCache.add(userId, cacheData);
     return cacheData;
   }
 }
