@@ -22,10 +22,10 @@ export class WalletService {
     private readonly walletProvider: CardanoWalletProviderService,
   ) {}
 
-  async createUserWallet(userId: number): Promise<UserWalletEntity> {
+  async createUserWallet(userID: string): Promise<UserWalletEntity> {
     const mnemonic = this.walletProvider.generateMnemonic();
 
-    const user = await this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOneBy({ id: userID });
     //assert that user exists
     if (!user) throw Error('UserEntity not found');
     const { publicKey, stakeKey, privateKey, stakePrivateKey } =
@@ -39,10 +39,10 @@ export class WalletService {
     return await this.userWalletRepository.save(wallet);
   }
 
-  async getUserWallet(userId: number): Promise<UserWalletEntity> {
-    const user = await this.userRepository.findOneBy({ id: userId });
+  async getUserWallet(userID: string): Promise<UserWalletEntity> {
+    const user = await this.userRepository.findOneBy({ id: userID });
     //assert that user exists
-    if (!user) throw new UserNotFoundException(userId);
+    if (!user) throw new UserNotFoundException(userID);
 
     const userWallet = await this.userWalletRepository.findOneBy({
       user: user,
@@ -52,10 +52,10 @@ export class WalletService {
     return userWallet;
   }
 
-  async getActiveReplicaWallets(userId: number): Promise<ReplicaWalletEntity[]> {
-    const user = await this.userRepository.findOneBy({ id: userId });
+  async getActiveReplicaWallets(userID: string): Promise<ReplicaWalletEntity[]> {
+    const user = await this.userRepository.findOneBy({ id: userID });
     //assert that user exists
-    if (!user) throw new UserNotFoundException(userId);
+    if (!user) throw new UserNotFoundException(userID);
 
     const walletManager = await this.walletManagerRepository.findOne({
       where: { user: user },
@@ -72,16 +72,16 @@ export class WalletService {
 
   @Transactional()
   async setReplicaWallets(
-    userId: number,
+    userID: string,
     count: number,
   ): Promise<PublicKeyInfo[]> {
     //TODO limit count
     try{
       const user = await this.userRepository.findOne({
-        where: { id: userId },
+        where: { id: userID },
         relations: ['wallet', 'walletManager'],
       });
-      if (!user) throw new UserNotFoundException(userId);
+      if (!user) throw new UserNotFoundException(userID);
       //create wallet manager if it doesn't exist
       if (!user.walletManager) {
         user.walletManager = new WalletManagerEntity();
@@ -89,7 +89,7 @@ export class WalletService {
       }
       runOnTransactionCommit(() => console.log('post created'));
       runOnTransactionRollback((e) => console.log('post rolled back    ',e));
-
+//TODO:r() runontransactioncommit check this
       const walletsToGenerate = count - user.walletManager.currentReplicaAmount;
 
       if (walletsToGenerate < 1) {
@@ -116,22 +116,22 @@ export class WalletService {
   }
 
 
-  async getReplicasCount(userId: number): Promise<number> {
-    const user = await this.userRepository.findOneBy({ id: userId });
+  async getReplicasCount(userID: string): Promise<number> {
+    const user = await this.userRepository.findOneBy({ id: userID });
     //assert that user exists
-    if (!user) throw new UserNotFoundException(userId);
+    if (!user) throw new UserNotFoundException(userID);
 
     return (await this.walletManagerRepository
       .createQueryBuilder('walletManager')
-      .where('walletManager.user.id = :id', { id: userId })
+      .where('walletManager.user.id = :id', { id: userID })
       .select('walletManager.currentReplicaAmount')
       .getOne()).currentReplicaAmount
   }
 
-  async getUserPublicWalletInfo(userId: number): Promise<PublicWalletInfo> {
-    const user = await this.userRepository.findOneBy({ id: userId });
+  async getUserPublicWalletInfo(userID: string): Promise<PublicWalletInfo> {
+    const user = await this.userRepository.findOneBy({ id: userID });
     //assert that user exists
-    if (!user) throw new UserNotFoundException(userId);
+    if (!user) throw new UserNotFoundException(userID);
 
     const userWallet = await this.userWalletRepository.findOneBy({
       user: user,
@@ -141,7 +141,7 @@ export class WalletService {
     return { address: userWallet.address, stakeKey: userWallet.stakeAddress};
   }
 
-  private createReplicaWallets(userMnemonic: string,startingIdx:number, count: number) {
+  private createReplicaWallets(userMnemonic: string, startingIdx:number, count: number) {
     const replicaWallets: ReplicaWalletEntity[] = [];
     const replicaWalletsResultDTOList = [];
 

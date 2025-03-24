@@ -58,3 +58,8 @@ export type AdaSendInfo = {
   address: string,
   amount: number
 }
+
+export class CreateUserInput {
+  platform_id: string;
+  platform_name: string;
+}

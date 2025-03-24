@@ -22,13 +22,13 @@ export class TransactionController {
   @Post("user/:user_id/buy/:policy_id/")
   @Transactional()
   async buyTokenWithReplicas(
-    @Param('user_id',ParseIntPipe) userId: number,
+    @Param('user_id',) userID: string,
     @Param('policy_id') policyId: string,
     @Body() buyInfoInput: BuyInfoOptionsInput,
   ): Promise<BuyTransactionOutput> {
     buyInfoInput.selfSend = buyInfoInput.selfSend || false;
     const res = await this.cardanoTokenService.multipleWalletBuyToken(
-    userId,policyId, buyInfoInput.amount,{slippage: buyInfoInput.slippage,selfSend: buyInfoInput.selfSend, distribution: buyInfoInput.distribution});
+    userID,policyId, buyInfoInput.amount,{slippage: buyInfoInput.slippage,selfSend: buyInfoInput.selfSend, distribution: buyInfoInput.distribution});
     console.log("res",res);
     return new BuyTransactionOutput(null, null, null, null);
   }
@@ -36,13 +36,13 @@ export class TransactionController {
   @Post("user/:user_id/sell/:policy_id/")
   @Transactional()
   async sellTokenWithReplicas(
-    @Param('user_id',ParseIntPipe) userId: number,
+    @Param('user_id',) userID: string,
     @Param('policy_id') policyId: string,
     @Body() sellInfoInput: SellInfoOptionsInput,
   ): Promise<BuyTransactionOutput> {
 
     const res = await this.cardanoTokenService.multipleWalletSellToken(
-    userId,policyId, sellInfoInput.percentage,{slippage: sellInfoInput.slippage,selfSend: sellInfoInput.selfSend, distribution: sellInfoInput.distribution});
+    userID,policyId, sellInfoInput.percentage,{slippage: sellInfoInput.slippage,selfSend: sellInfoInput.selfSend, distribution: sellInfoInput.distribution});
 
     console.log("res",res);
     return new BuyTransactionOutput(null, null, null, null);
@@ -53,7 +53,7 @@ export class TransactionController {
   @Post("user/:user_id/replicas/prepare")
   @Transactional()
   async prepareReplicaWallets(
-    @Param('user_id',ParseIntPipe) userId: number,
+    @Param('user_id',) userId: string,
     @Query('amount',ParseIntPipe) mainWalletAllocatedAmount: number,
     @Query('distribution') distribution: Distribution,
   ): Promise<any> {

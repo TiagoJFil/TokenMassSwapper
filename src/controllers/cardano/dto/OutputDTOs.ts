@@ -6,7 +6,7 @@ export class OutputDTOs {
 }
 
 export class UserWalletCreateOutput {
-  constructor(public id : number,public address: string, public mnemonic: string) {
+  constructor(public id : string, public address: string, public mnemonic: string) {
   }
 }
 
