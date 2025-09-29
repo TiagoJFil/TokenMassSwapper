@@ -10,8 +10,11 @@ import { DexhunterService } from './services/cardano/provider/dexhunter.service'
 import {
   BlockfrostConfigProvider, CustomNodeEndpointProvider,
   DexhunterConfigProvider,
-  NetworkProvider, TxSubmitterProvider,
+  NetworkProvider, SniperConfigProvider, TxSubmitterProvider,
 } from './nextjs/providers';
+import { BuyWeightsCache } from './model/entities/buy-weights-cache.entity';
+import { WalletBuyCache } from './services/cache/WalletBuyCache';
+import { DbWalletBuyCache } from './services/cache/DbWalletBuyCache';
 import { CardanoWalletProviderService } from './services/cardano/provider/cardano-wallet-provider.service';
 import { ENV } from './utils/constants';
 import { UserService } from './services/user.service';
@@ -23,6 +26,10 @@ import { WalletManagerEntity } from './model/entities/wallet-manager.entity';
 import { TransactionController } from './controllers/cardano/transaction.controller';
 import { NodeTxSubmitterService } from './services/cardano/provider/node/node-tx-submitter.service';
 import { BlockFrostTxSubmitterService } from './services/cardano/provider/node/blockfrost-tx-submitter.service';
+import { AppDataSourceOptions } from './database.options';
+import { SniperService } from './services/sniper/sniper.service';
+import { SniperRequestEntity } from './model/entities/sniper-request.entity';
+import { SniperController } from './controllers/cardano/sniper.controller';
 
 require('dotenv').config();
 
@@ -59,8 +66,17 @@ export class BlockFrostModule {}
 export class DexHunterModule {}
 
 @Module({
-  imports: [BlockFrostModule, DexHunterModule,WalletModule],
-  providers: [CardanoTokenService],
+  imports: [
+    BlockFrostModule, 
+    DexHunterModule,
+    WalletModule,
+    TypeOrmModule.forFeature([BuyWeightsCache]),
+  ],
+  providers: [
+    CardanoTokenService,
+    WalletBuyCache,
+    DbWalletBuyCache,
+  ],
   exports: [CardanoTokenService],
 })
 export class CardanoModule {}
@@ -78,33 +94,44 @@ export class UserModule {}
 })
 export class CardanoEndpointModule {}
 
-
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      useFactory() {
-        return {
-          type: 'postgres',
-          host: process.env[ENV.DB_HOST],
-          port: Number(process.env[ENV.DB_PORT]),
-          username: process.env[ENV.DB_USERNAME],
-          password: process.env[ENV.DB_PASSWORD],
-          database: process.env[ENV.DB_DATABASE],
-          autoLoadEntities: true,
-          logging: false,
-          synchronize: true,
-          entities: [__dirname + '/../entities/*{.ts,.js}', __dirname + '/../entities/**/*{.ts,.js}'],
-        };
-      },
-      async dataSourceFactory(options) {
-        if (!options) {
-          throw new Error('Invalid options passed');
-        }
+    useFactory() {
+      return {
+        type: 'postgres',
+        autoLoadEntities: true,
+        ...AppDataSourceOptions
+      };
+    },
+    async dataSourceFactory(options) {
+      if (!options) {
+        throw new Error('Invalid options passed');
+      }
 
-        return addTransactionalDataSource(new DataSource(options));
-      },
-    }),
-    CardanoEndpointModule
+      return addTransactionalDataSource(new DataSource(options));
+    },
+  })],
+  providers: [],
+})
+export class DatabaseModule {}
+
+
+
+@Module({
+  imports: [
+     TypeOrmModule.forFeature([SniperRequestEntity,WalletManagerEntity])
+    ],
+  providers: [SniperConfigProvider,SniperService],
+  controllers: [SniperController],
+})
+export class SniperModule {}
+
+@Module({
+  imports: [
+    DatabaseModule,
+    CardanoEndpointModule,
+    SniperModule
   ],
   providers: [],
 })

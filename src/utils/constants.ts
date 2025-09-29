@@ -5,6 +5,7 @@ export class NESTJS {
     public static BLOCKFROST_CONFIG_PROVIDER_KEY = 'BLOCKFROST_CONFIG'
     public static TX_SUBMITTER_PROVIDER_KEY = "TX_SUBMITTER_PROVIDER_KEY";
     public static CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT = "CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT_PROVIDER_KEY";
+    public static IS_WORKER_PROVIDER_KEY = "IS_WORKER_PROVIDER_KEY";
 }
 
 export class CARDANO {
@@ -45,11 +46,12 @@ export class ENV {
     public static BLOCKCHAIN_NETWORK = 'BLOCKCHAIN_NETWORK'
     public static DEXHUNTER_API_BASE_URL = 'DEXHUNTER_API_BASE_URL'
     public static DEXHUNTER_PARTNER_ID = 'DEXHUNTER_PARTNER_ID'
+    public static HAS_SNIPER_WORKER = 'HAS_SNIPER_WORKER'
     public static BLOCKFROST_API_KEY = 'BLOCKFROST_API_KEY'
     public static DB_HOST = "DB_HOST";
     public static DB_PORT = "DB_PORT";
-    public static DB_USERNAME = "DB_USERNAME" ;
-    public static DB_PASSWORD = "DB_PASSWORD" ;
-    public static DB_DATABASE = "DB_DATABASE" ;
+    public static DB_USERNAME = "DB_USERNAME";
+    public static DB_PASSWORD = "DB_PASSWORD";
+    public static DB_DATABASE = "DB_DATABASE";
     public static CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT= "CUSTOM_NODE_API_SUBMIT_TX_ENDPOINT";
 }

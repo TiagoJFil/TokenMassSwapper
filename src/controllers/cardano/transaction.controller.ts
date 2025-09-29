@@ -27,8 +27,19 @@ export class TransactionController {
     @Body() buyInfoInput: BuyInfoOptionsInput,
   ): Promise<BuyTransactionOutput> {
     buyInfoInput.selfSend = buyInfoInput.selfSend || false;
+    buyInfoInput.useCache = buyInfoInput.useCache || false;
+    
     const res = await this.cardanoTokenService.multipleWalletBuyToken(
-    userId,policyId, buyInfoInput.amount,{slippage: buyInfoInput.slippage,selfSend: buyInfoInput.selfSend, distribution: buyInfoInput.distribution});
+      userId,
+      policyId, 
+      buyInfoInput.amount,
+      {
+        slippage: buyInfoInput.slippage,
+        selfSend: buyInfoInput.selfSend, 
+        distribution: buyInfoInput.distribution,
+        useCache: buyInfoInput.useCache
+      }
+    );
     console.log("res",res);
     return new BuyTransactionOutput(null, null, null, null);
   }
@@ -56,8 +67,14 @@ export class TransactionController {
     @Param('user_id',ParseIntPipe) userId: number,
     @Query('amount',ParseIntPipe) mainWalletAllocatedAmount: number,
     @Query('distribution') distribution: Distribution,
+    @Query('setCache') setCache: boolean = false,
   ): Promise<any> {
-    const balances = await this.cardanoTokenService.distributeAdaToReplicas(userId,mainWalletAllocatedAmount, distribution);
+    const balances = await this.cardanoTokenService.distributeAdaToReplicas(
+      userId, 
+      mainWalletAllocatedAmount, 
+      distribution,
+      setCache
+    );
     return balances
   }
 

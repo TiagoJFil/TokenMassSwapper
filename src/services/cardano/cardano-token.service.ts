@@ -11,6 +11,7 @@ import {
 import {
   CARDANO,
   TOKEN_DISTRIBUTE_WEIGHTS_TABLES,
+  TOKEN_BUY_WEIGHTS_TABLES,
 } from '../../utils/constants';
 import { ReplicaWalletEntity } from '../../model/entities/wallet/replica-wallet.entity';
 import {
@@ -24,6 +25,7 @@ import {
 } from '../types';
 import { CardanoWalletProviderService } from './provider/cardano-wallet-provider.service';
 import { selectItemBasedOnProbability } from '../../utils/utils';
+import { WalletBuyCache } from '../cache/WalletBuyCache';
 
 @Injectable()
 export class CardanoTokenService {
@@ -32,6 +34,7 @@ export class CardanoTokenService {
     private readonly chainService: BlockChainService,
     private readonly walletService: WalletService,
     private readonly walletProvider: CardanoWalletProviderService,
+    private readonly walletBuyCache: WalletBuyCache,
   ) {}
 
   private async getCardanoTokenMetadata(assetId: string): Promise<AssetInfo> {
@@ -124,6 +127,40 @@ export class CardanoTokenService {
       await this.walletService.getActiveReplicaWallets(userId);
     const userWallet = await this.walletService.getUserWallet(userId);
 
+    // If useCache is true, try to use cached values first
+    if (options.useCache) {
+      const walletIds = replicaWallets.map(wallet => wallet.address); // Use address as unique identifier
+      const cachedAmounts = await this.walletBuyCache.getCachedBuyAmounts(walletIds);
+      
+      // If we have cached values for at least some wallets, use them
+      if (cachedAmounts.size > 0) {
+        const validWallets = [];
+        const validAmounts = [];
+        
+        for (const wallet of replicaWallets) {
+          const cachedAmount = cachedAmounts.get(wallet.address);
+          if (cachedAmount && cachedAmount > 0) {
+            validWallets.push(wallet);
+            validAmounts.push(cachedAmount);
+          }
+        }
+        
+        // If we have valid amounts for some wallets, execute the swap
+        if (validWallets.length > 0) {
+          console.log(`Using ${validWallets.length} cached wallet buy amounts`);
+          return await this.multipleWalletSwapToken(
+            SWAP.BUY,
+            policyId,
+            userWallet.address,
+            validWallets,
+            validAmounts,
+            options,
+          );
+        }
+      }
+      // If no cache or empty cache, continue with normal distribution logic
+    }
+
     switch (options.distribution) {
       case Distribution.UNIFORM: {
         return await this.multipleWalletSwapToken(
@@ -136,12 +173,76 @@ export class CardanoTokenService {
         );
       }
       case Distribution.WEIGHTED: {
-        //TODO see logic about weighted distribution
-        //TODO think about wallet balances
+        // Import the weights table if not already imported
+        const probabilityTable = TOKEN_DISTRIBUTE_WEIGHTS_TABLES.SIMPLE;
+        
+        // Fetch wallet balances in parallel for speed
+        const walletBalances = await Promise.all(
+          replicaWallets.map(async (wallet) => {
+            return {
+              wallet,
+              balance: await this.chainService.getAdaBalance(wallet.address)
+            };
+          })
+        );
+        
+        // Try up to 6 times to find a valid distribution
+        let validDistribution = false;
+        let attempts = 0;
+        const maxAttempts = 6;
+        let buyAmounts: number[] = [];
+        
+        while (!validDistribution && attempts < maxAttempts) {
+          buyAmounts = [];
+          validDistribution = true;
+          
+          // Try to generate a valid distribution
+          for (const walletInfo of walletBalances) {
+            // Get a random amount based on probability
+            const amtToBuy = selectItemBasedOnProbability(probabilityTable);
+            
+            // Check if wallet has enough funds
+            if (walletInfo.balance < amtToBuy + CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE) {
+              validDistribution = false;
+              break;
+            }
+            
+            buyAmounts.push(amtToBuy);
+          }
+          
+          attempts++;
+        }
+        
+        // If no valid distribution after 6 attempts, use max available balance
+        if (!validDistribution) {
+          buyAmounts = walletBalances.map(walletInfo => 
+            Math.max(0, walletInfo.balance - CARDANO.INDIVIDUAL_WALLET_MIN_BALANCE)
+          );
+        }
+        
+        // Filter out wallets with zero buy amount for speed
+        const validWallets = [];
+        const validAmounts = [];
+        
+        for (let i = 0; i < replicaWallets.length; i++) {
+          if (buyAmounts[i] > 0) {
+            validWallets.push(replicaWallets[i]);
+            validAmounts.push(buyAmounts[i]);
+          }
+        }
+        
+        return await this.multipleWalletSwapToken(
+          SWAP.BUY,
+          policyId,
+          userWallet.address,
+          validWallets,
+          validAmounts,
+          options,
+        );
       }
     }
 
-    //selectItemBasedOnProbability
+    // Default behavior if distribution isn't handled
     return await this.multipleWalletSwapToken(
       SWAP.BUY,
       policyId,
@@ -277,6 +378,7 @@ export class CardanoTokenService {
     userId,
     amountAllocatedFromMain,
     distribution: Distribution,
+    setCache = false,
   ) {
     const replicas = await this.walletService.getActiveReplicaWallets(userId);
     const userWallet = await this.walletService.getUserWallet(userId);
@@ -320,42 +422,110 @@ export class CardanoTokenService {
           mainWalletAddress,
           adaSendInfo,
         );
+        
+        // Save cache if requested
+        if (setCache) {
+          for (const info of adaSendInfo) {
+            await this.walletBuyCache.setCacheBuyAmount(info.address, info.amount);
+          }
+        }
 
         return {
           amounts: adaSendInfo,
           extra: extraAmount,
           txHash,
+          cached: setCache,
         };
       }
       case Distribution.WEIGHTED: {
         const probabilityTable = TOKEN_DISTRIBUTE_WEIGHTS_TABLES.SIMPLE;
-
-        let alreadySent = 0;
-        let totalAmount = amountAllocatedFromMain;
-
-        let adaSendInfo : AdaSendInfo[] = []
-        for (const currReplica of replicas) {
-          const amtToSend = selectItemBasedOnProbability(probabilityTable);
-          if (totalAmount < 0) {
-            extraAmount = totalAmount - alreadySent;
-            break;
+        
+        // Make multiple attempts to find a valid distribution
+        let adaSendInfo: AdaSendInfo[] = [];
+        let validDistribution = false;
+        let attempts = 0;
+        const maxAttempts = 45;
+        
+        while (!validDistribution && attempts < maxAttempts) {
+          let alreadySent = 0;
+          adaSendInfo = [];
+          
+          // Try to create a distribution for all replicas
+          for (const currReplica of replicas) {
+            const amtToSend = selectItemBasedOnProbability(probabilityTable);
+            
+            // Check if adding this amount would exceed the allocated amount
+            if (alreadySent + amtToSend > amountAllocatedFromMain) {
+              break; // This distribution exceeds the limit, try again
+            }
+            
+            alreadySent += amtToSend;
+            adaSendInfo.push({
+              address: currReplica.address,
+              amount: amtToSend,
+            });
           }
-          alreadySent += amtToSend
-          adaSendInfo.push({
-            address: currReplica.address,
-            amount: amtToSend,
-          });
+          
+          // Check if we have a valid distribution for all replicas
+          if (adaSendInfo.length === replicas.length) {
+            validDistribution = true;
+            extraAmount = amountAllocatedFromMain - alreadySent;
+          }
+          
+          attempts++;
         }
-
+        
+        // If we couldn't find a valid distribution after max attempts,
+        // distribute the remaining amount to the last wallet
+        if (!validDistribution) {
+          adaSendInfo = [];
+          let alreadySent = 0;
+          
+          // Distribute to all wallets except the last one
+          for (let i = 0; i < replicas.length - 1; i++) {
+            const amtToSend = selectItemBasedOnProbability(probabilityTable);
+            if (alreadySent + amtToSend > amountAllocatedFromMain) {
+              // Skip this wallet if it would exceed the limit
+              continue;
+            }
+            
+            alreadySent += amtToSend;
+            adaSendInfo.push({
+              address: replicas[i].address,
+              amount: amtToSend,
+            });
+          }
+          
+          // Put the remaining amount in the last wallet
+          const remainingAmount = amountAllocatedFromMain - alreadySent;
+          if (remainingAmount > 0) {
+            adaSendInfo.push({
+              address: replicas[replicas.length - 1].address,
+              amount: remainingAmount,
+            });
+          }
+          
+          extraAmount = 0; // All funds are distributed
+        }
+        console.log("took, attempts", attempts)
         const txHash = await this.chainService.sendCardano(
           mainWalletKeyPair.privateKey,
           mainWalletAddress,
           adaSendInfo
         );
+        
+        // Save cache if requested
+        if (setCache) {
+          for (const info of adaSendInfo) {
+            await this.walletBuyCache.setCacheBuyAmount(info.address, info.amount);
+          }
+        }
+        
         return {
           amounts: adaSendInfo,
           extra: extraAmount,
           txHash,
+          cached: setCache,
         };
       }
     }

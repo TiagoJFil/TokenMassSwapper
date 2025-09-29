@@ -39,6 +39,16 @@ export const TxSubmitterProvider: Provider = {
   },
 };
 
+export const SniperConfigProvider: Provider = {
+  provide: NESTJS.IS_WORKER_PROVIDER_KEY,
+  useFactory: () => {
+    const sniper_base_url = process.env[ENV.HAS_SNIPER_WORKER];
+    return new Configuration({
+      basePath: sniper_base_url,
+    });
+  },
+}
+
 export const BlockfrostConfigProvider: Provider = {
   provide: NESTJS.BLOCKFROST_CONFIG_PROVIDER_KEY,
   useFactory: () => {

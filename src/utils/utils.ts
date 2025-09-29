@@ -15,7 +15,6 @@ export function selectItemBasedOnProbability(table: { [key: number]: number }): 
   throw new Error('Failed to select an item based on probability');
 }
 
-
 export function cutTableOutcomeHigherThan(
   table: { [key: number]: number },
   value: number,

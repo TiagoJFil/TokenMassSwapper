@@ -44,6 +44,7 @@ export type SwapOptionsInput = {
   slippage: number;
   selfSend?: boolean;
   distribution?: Distribution;
+  useCache?: boolean;
 };
 
 export enum APP_NETWORK {
@@ -57,4 +58,22 @@ export type OutputTxInfo = {assetId?: string, address: string, amount: number}
 export type AdaSendInfo = {
   address: string,
   amount: number
+}
+
+//add verification to params
+export type SniperFilterParameters = {
+  any: boolean;
+  policyID: string | null;
+  ticker: string | null;
+  description: string | null;
+  launchType: string | null;
+  devPercentage: string | null;
+  slippage: number;
+  buy_amount: number;
+  socials: {
+    twitter: string | null;
+    telegram: string | null;
+    discord: string | null;
+    website: string | null;
+  }
 }
