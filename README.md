@@ -1,103 +1,208 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# TokenMassSwapper
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A Cardano-based token trading api built with NestJS that enables mass token swapping operations across multiple wallets with advanced distribution strategies.
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+TokenMassSwapper is designed for multiple-chain currently only including Cardano ecosystem but futurely kaspa that allows users to execute large-scale token buy/sell operations across multiple replica wallets. The API provides intelligent distribution algorithms, slippage protection, and comprehensive wallet management capabilities.
 
-## Project setup
+## Features
 
+- **Multi-Wallet Trading**: Execute trades across multiple replica wallets for enhanced liquidity and reduced market impact
+- **Intelligent Distribution**: Advanced algorithms for optimal trade distribution across wallets
+- **Cardano Integration**: Native support for Cardano blockchain and tokens
+- **Real-time Token Metadata**: Automatic fetching and caching of token information
+- **RESTful API**: Clean, well-documented API endpoints for all operations
+- **Transaction Management**: Robust transaction handling with rollback capabilities
+
+## Architecture
+
+The application follows a modular architecture built on NestJS with the following key components:
+
+- **Controllers**: Handle HTTP requests and responses (`/src/controllers/`)
+  - `TransactionController`: Manages buy/sell operations
+  - `WalletController`: Handles wallet management
+- **Services**: Business logic implementation (`/src/services/`)
+  - `CardanoTokenService`: Core token trading functionality
+  - `WalletService`: Wallet management and operations
+  - `DexhunterService`: DEX integration for token swaps
+  - `BlockChainService`: Blockchain interaction layer
+- **Entities**: Database models (`/src/model/entities/`)
+  - User, Wallet, ReplicaWallet entities
+- **Providers**: External service integrations
+  - BlockFrost API integration
+  - DexHunter SDK integration
+
+## Prerequisites
+
+- **Node.js** (v18 or higher)
+- **Bun** runtime
+- **PostgreSQL** database
+- **Cardano** wallet setup
+- **BlockFrost** API key
+- **DexHunter** API access
+
+## Installation
+
+1. **Clone the repository**
 ```bash
-$ bun install
+git clone https://github.com/TiagoJFil/TokenMassSwapper.git
+cd TokenMassSwapper
 ```
 
-## Compile and run the project
-
+2. **Install dependencies**
 ```bash
-# development
-$ bun run start
-
-# watch mode
-$ bun run start:dev
-
-# production mode
-$ bun run start:prod
+bun install
 ```
 
-## Run tests
+3. **Set up environment variables**
+Create a `.env` file in the root directory:
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+DB_NAME=tokenmassswapper
 
-```bash
-# unit tests
-$ bun run test
+# Cardano Configuration
+BLOCKFROST_API_KEY=your_blockfrost_api_key
+BLOCKFROST_NETWORK=mainnet  # or testnet
 
-# e2e tests
-$ bun run test:e2e
+# DexHunter Configuration
+DEXHUNTER_API_KEY=your_dexhunter_api_key
 
-# test coverage
-$ bun run test:cov
+# Application Configuration
+PORT=3000
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+4. **Set up the database**
 ```bash
-$ bun install -g mau
-$ mau deploy
+# Create PostgreSQL database and run the schema
+psql -U your_username -d tokenmassswapper -f db.sql
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Development
 
-## Resources
+```bash
+# Start development server
+bun run start:dev
 
-Check out a few resources that may come in handy when working with NestJS:
+# Start production server  
+bun run start:prod
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Build the project
+bun run build
+```
+
+## API Endpoints
+
+### Transaction Operations
+
+#### Buy Token with Multiple Wallets
+```http
+POST /transaction/user/{user_id}/buy/{policy_id}
+```
+**Body:**
+```json
+{
+  "amount": 1000000,
+  "slippage": 0.05,
+  "selfSend": false,
+  "distribution": "EQUAL" // or "WEIGHTED", "RANDOM"
+}
+```
+
+#### Sell Token with Multiple Wallets
+```http
+POST /transaction/user/{user_id}/sell/{policy_id}
+```
+**Body:**
+```json
+{
+  "percentage": 0.5,
+  "slippage": 0.05,
+  "selfSend": false,
+  "distribution": "EQUAL"
+}
+```
+
+### Wallet Management
+
+#### Create User Wallet
+```http
+POST /wallet/user/{user_id}/create
+```
+
+#### Create Replica Wallets
+```http
+POST /wallet/user/{user_id}/replicas
+```
+**Body:**
+```json
+{
+  "count": 5
+}
+```
+
+#### Get Wallet Balance
+```http
+GET /wallet/{wallet_address}/balance
+```
+
+## Distribution Strategies
+
+The platform supports several distribution strategies for multi-wallet operations:
+
+- **EQUAL**: Distributes trades equally across all wallets
+- **WEIGHTED**: Uses predefined weight tables for distribution  
+- **RANDOM**: Randomly distributes trades with controlled variance
+
+## Technology Stack
+
+- **Framework**: NestJS
+- **Runtime**: Bun
+- **Database**: PostgreSQL with TypeORM
+- **Blockchain**: Cardano
+- **APIs**: BlockFrost, DexHunter
+- **Language**: TypeScript
+
+## Project Structure
+
+```
+src/
+├── controllers/          # HTTP controllers
+│   └── cardano/         # Cardano-specific controllers
+├── services/            # Business logic services
+│   ├── cardano/        # Cardano blockchain services
+│   └── exceptions/     # Custom exception handling
+├── model/              # Data layer
+│   ├── entities/       # TypeORM entities
+│   └── database/       # Database configuration
+├── utils/              # Utility functions and constants
+└── nextjs/             # Next.js integration utilities
+```
+
+## Security Considerations
+
+- All wallet mnemonics are encrypted in the database
+- API endpoints include input validation and sanitization
+- Transaction operations use database transactions for atomicity
+- Slippage protection prevents unfavorable trades
+- Rate limiting should be implemented for production use
+
+## License
+
+This project is licensed under the Apache-2.0 license - see the [LICENSE](LICENSE) file for details.
+
+
+## Disclaimer
+
+This software is for educational and development purposes. Always test thoroughly on testnets before using with real funds. The developers are not responsible for any financial losses incurred through the use of this software.
 
 
 
-# KasMassMinter
-
-
-kaspa info:
-https://kaspa.org/wp-content/uploads/2023/03/Integration_Guide_for_Kaspa_BlockDAG.pdf
-https://wiki.kaspa.org/en/developers-knowledge-base
-
-
-kaspa api
-https://api.kaspa.org/docs
-
-kasplex api
+# Ignore.. (info for future kaspa integration)
 https://docs.kasplex.org/tools-and-reference/kasplex-indexer-api/general/get-indexer-status
 
 
